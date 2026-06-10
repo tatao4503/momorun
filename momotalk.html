@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#070a1a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="노아 모모톡" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>모모런 - 모모톡 라이트</title>
+<link rel="stylesheet" href="css/lite.css" />
+</head>
+<body>
+<div class="lite-app">
+  <header>
+    <div class="brand-lite">
+      <img src="icon-192.png" alt="Noa">
+      <div>
+        <h1>우시오 노아</h1>
+        <small>MOMOTALK LITE</small>
+      </div>
+    </div>
+    <a href="index.html" class="switch-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+      샬레 풀버전
+    </a>
+  </header>
+
+  <div class="spacer"></div>
+
+  <div class="panel">
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 240 240">
+        <circle cx="120" cy="120" r="106" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="16"/>
+        <circle id="prog" cx="120" cy="120" r="106" fill="none" stroke="#7dd3fc" stroke-width="16"
+                stroke-linecap="round" stroke-dasharray="666" stroke-dashoffset="666"/>
+      </svg>
+      <div class="center-content">
+        <div class="steps" id="steps">0</div>
+        <div class="steps-label">걸음</div>
+      </div>
+    </div>
+    <div class="goal-txt" id="goaltxt">목표까지 남음</div>
+    
+    <div class="controls">
+      <button class="btn-main" id="toggle">시작</button>
+    </div>
+    
+    <div class="sensor-state">
+      <span class="dot" id="dot"></span>
+      <span id="sensorTxt">대기 중</span>
+    </div>
+  </div>
+  
+  <div class="spacer"></div>
+</div>
+
+<div id="toast" class="lite-toast hidden"></div>
+
+<script src="js/lite.js"></script>
+</body>
+</html>

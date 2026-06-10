@@ -1,0 +1,25 @@
+{
+  "name": "모모런",
+  "short_name": "모모런",
+  "description": "노아가 오늘 걸음을 기록해 주는 로컬 만보기.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12162f",
+  "theme_color": "#12162f",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
