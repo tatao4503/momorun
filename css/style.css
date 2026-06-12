@@ -187,7 +187,13 @@
 	  }
 
 	  /* Hero space lets the Noa artwork show through at the top */
-	  .hero-space { flex: 1 0 auto; min-height: 28vh; }
+	  .hero-space { flex: 1 0 auto; min-height: 28vh; position: relative; }
+	  /* 배경 일러스트 → 패널로 넘어가는 경계를 부드럽게 잇는 램프 */
+	  .hero-space::after {
+	    content: ""; position: absolute; left: -20px; right: -20px; bottom: -1px; height: 110px;
+	    pointer-events: none;
+	    background: linear-gradient(180deg, rgba(10,13,32,0) 0%, rgba(10,13,32,0.28) 55%, rgba(10,13,32,0.5) 100%);
+	  }
   .hero-name {
     align-self: center; text-align: center;
     font-size: 13px; letter-spacing: 0; color: var(--violet-soft);
@@ -242,9 +248,12 @@
     align-items: center; justify-content: center; gap: 2px;
   }
   .steps { font-size: 50px; font-weight: 800; line-height: 1; letter-spacing: 0;
-    text-shadow: 0 0 24px rgba(167,139,250,0.45); transition: transform .12s ease; }
+    text-shadow: 0 0 24px rgba(167,139,250,0.45); transition: transform .12s ease, color .4s ease, text-shadow .4s ease; }
   .steps-label { color: var(--muted); font-size: 13px; }
   .goaltxt { color: var(--violet-soft); font-size: 13px; margin-top: 6px; }
+  /* 목표 달성 시 금색 강조 */
+  .ring.complete .steps { color: #ffe9a8; text-shadow: 0 0 26px rgba(255,211,107,0.6); }
+  .ring.complete .steps-label { color: var(--gold); }
 
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .stat {
@@ -315,23 +324,24 @@
     display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
     padding: 4px 0 0;
   }
-  .stamp {
+  .daystamp {
     display: grid; place-items: center; gap: 4px; min-width: 0;
     color: var(--muted); font-size: 10px; font-weight: 700;
   }
-  .stamp i {
+  .daystamp i {
     width: 22px; height: 22px; border-radius: 50%; display: block;
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.10);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
   }
-  .stamp.walked i { background: rgba(125,211,252,0.18); border-color: rgba(125,211,252,0.34); }
-  .stamp.done i {
+  .daystamp.walked i { background: rgba(125,211,252,0.18); border-color: rgba(125,211,252,0.34); }
+  .daystamp.done i {
     background: linear-gradient(135deg, var(--gold), var(--good));
     border-color: rgba(255,255,255,0.45);
     box-shadow: 0 0 12px rgba(255,211,107,0.35);
   }
-  .stamp.today { color: #fff; }
+  .daystamp.today i { border-color: var(--violet-soft); box-shadow: 0 0 10px rgba(167,139,250,0.5); }
+  .daystamp.today { color: #fff; }
   .hint {
     display: grid; gap: 9px;
     color: var(--muted); font-size: 12px; line-height: 1.5;
@@ -384,10 +394,12 @@
 	    justify-content: center;
 	    gap: 8px;
 	    margin-top: 4px;
-	    border: none;
+	    border: 1px solid rgba(255,255,255,0.18);
 	    color: #fff;
-	    background: linear-gradient(135deg, #10b981, #059669);
-	    box-shadow: 0 4px 14px rgba(16,185,129,0.30);
+	    background:
+	      linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 48%),
+	      linear-gradient(135deg, #38bdf8, #0ea5e9);
+	    box-shadow: 0 4px 14px rgba(56,189,248,0.30), inset 0 1px 0 rgba(255,255,255,0.35);
 	  }
 	  .briefing-stack {
 	    display: grid;
@@ -631,15 +643,24 @@
 }
 
   .momotalk-toast.hidden { display: none; }
-  .momotalk-header { background: rgba(0,0,0,0.3); padding: 10px 14px; display: flex; align-items: center; border-bottom: 1px solid rgba(125,211,252,0.1); }
-  .momotalk-avatar { width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; border: 1px solid rgba(125,211,252,0.3); }
-  .momotalk-title { color: #7dd3fc; font-weight: 800; font-size: 14px; flex: 1; }
+  .momotalk-header { background: linear-gradient(180deg, rgba(125,211,252,0.16), rgba(0,0,0,0.25)); padding: 11px 14px; display: flex; align-items: center; border-bottom: 1px solid rgba(125,211,252,0.18); }
+  .momotalk-avatar { width: 42px; height: 42px; border-radius: 50%; margin-right: 11px; border: 2px solid rgba(125,211,252,0.55); box-shadow: 0 0 12px rgba(125,211,252,0.4); object-fit: cover; }
+  .momotalk-title { color: #cdeafe; font-weight: 800; font-size: 14px; flex: 1; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
   .momotalk-close { background: none; border: none; color: #7dd3fc; font-size: 20px; cursor: pointer; padding: 0 5px; }
-  .momotalk-body { padding: 16px; background: transparent; }
+  .momotalk-body { padding: 14px 16px 16px; background: transparent; }
   .momotalk-bubble {
-    background: rgba(125,211,252,0.1); border: 1px solid rgba(125,211,252,0.2); padding: 12px 16px;
-    border-radius: 4px 16px 16px 16px; color: #fff; font-size: 14px; line-height: 1.5;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2); font-weight: 500;
+    position: relative; margin-left: 6px;
+    background: linear-gradient(180deg, rgba(125,211,252,0.18), rgba(125,211,252,0.08));
+    border: 1px solid rgba(125,211,252,0.28); padding: 12px 16px;
+    border-radius: 4px 16px 16px 16px; color: #fff; font-size: 14px; line-height: 1.55;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12); font-weight: 500;
+  }
+  /* 말풍선 꼬리 */
+  .momotalk-bubble::before {
+    content: ""; position: absolute; top: 0; left: -7px; width: 12px; height: 12px;
+    background: rgba(125,211,252,0.18);
+    border-left: 1px solid rgba(125,211,252,0.28); border-top: 1px solid rgba(125,211,252,0.28);
+    border-radius: 4px 0 0 0; transform: skewX(-12deg);
   }
 
   /* Settings Modal */
@@ -701,7 +722,8 @@
     color: #f43f5e;
     font-family: "Courier New", Courier, monospace, "Batang", serif;
     font-weight: 800;
-    font-size: 6px;
+    font-size: 7.5px;
+    letter-spacing: -0.3px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -717,7 +739,7 @@
   }
   .stamp span {
     display: block;
-    transform: scale(0.9);
+    transform: scale(0.96);
   }
   .stamp.stamp-yuuka {
     border-color: #38bdf8;

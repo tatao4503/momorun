@@ -448,7 +448,8 @@
     kcal: $('kcal'),
     pct: $('pct'),
     todayRecord: $('todayRecord'),
-    phase: $('phase')
+    phase: $('phase'),
+    ring: document.querySelector('.ring')
   };
   
   // --- 주간 총력전 (Raid Boss) ---
@@ -498,7 +499,7 @@
 	      const walkedClass = r.steps > 0 ? ' walked' : '';
 	      const doneClass = r.steps >= r.goal ? ' done' : '';
 	      const title = `${weekday} ${r.steps.toLocaleString()}보 · ${sourceSummary(r.sources, r.steps).replace('출처: ', '')}`;
-	      return `<div class="stamp${todayClass}${walkedClass}${doneClass}" title="${title}"><i></i><span>${weekday}</span></div>`;
+	      return `<div class="daystamp${todayClass}${walkedClass}${doneClass}" title="${title}"><i></i><span>${weekday}</span></div>`;
 	    }).join('');
 	    
 	    updateChart(records);
@@ -526,6 +527,11 @@
     els.steps.textContent = state.steps.toLocaleString();
     const ratio = Math.min(state.steps / state.goal, 1);
     els.prog.style.strokeDashoffset = CIRC * (1 - ratio);
+    // 목표 달성 시 링을 금색으로 + 글로우
+    const complete = ratio >= 1;
+    els.prog.setAttribute('stroke', complete ? 'url(#gGold)' : 'url(#g)');
+    els.prog.style.filter = complete ? 'drop-shadow(0 0 8px rgba(255,211,107,0.65))' : '';
+    els.ring && els.ring.classList.toggle('complete', complete);
     const remain = Math.max(state.goal - state.steps, 0);
     els.goaltxt.textContent = remain > 0
       ? `목표 ${state.goal.toLocaleString()}보까지 ${remain.toLocaleString()}보 남음`
