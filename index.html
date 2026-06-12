@@ -1,6 +1,55 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>
+  window.onerror = function(msg, url, line, col, error) {
+    var div = document.getElementById('debug-err-console') || document.createElement('div');
+    div.id = 'debug-err-console';
+    div.style.position = 'fixed';
+    div.style.bottom = '0';
+    div.style.left = '0';
+    div.style.width = '100%';
+    div.style.background = 'rgba(239, 68, 68, 0.95)';
+    div.style.color = '#fff';
+    div.style.padding = '12px';
+    div.style.fontSize = '12px';
+    div.style.zIndex = '9999999';
+    div.style.maxHeight = '150px';
+    div.style.overflowY = 'auto';
+    div.style.fontFamily = 'monospace';
+    div.style.wordBreak = 'break-all';
+    div.innerHTML = '<strong>JS Error:</strong> ' + msg + '<br>at ' + url + ':' + line + ':' + col + (error && error.stack ? '<br>' + error.stack : '');
+    if (!document.body) {
+      window.addEventListener('DOMContentLoaded', function() { document.body.appendChild(div); });
+    } else {
+      document.body.appendChild(div);
+    }
+    return false;
+  };
+  window.addEventListener('unhandledrejection', function(event) {
+    var div = document.getElementById('debug-err-console') || document.createElement('div');
+    div.id = 'debug-err-console';
+    div.style.position = 'fixed';
+    div.style.bottom = '0';
+    div.style.left = '0';
+    div.style.width = '100%';
+    div.style.background = 'rgba(245, 158, 11, 0.95)';
+    div.style.color = '#fff';
+    div.style.padding = '12px';
+    div.style.fontSize = '12px';
+    div.style.zIndex = '9999999';
+    div.style.maxHeight = '150px';
+    div.style.overflowY = 'auto';
+    div.style.fontFamily = 'monospace';
+    div.style.wordBreak = 'break-all';
+    div.innerHTML = '<strong>Promise Reject:</strong> ' + event.reason;
+    if (!document.body) {
+      window.addEventListener('DOMContentLoaded', function() { document.body.appendChild(div); });
+    } else {
+      document.body.appendChild(div);
+    }
+  });
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#12162f" />
@@ -10,9 +59,9 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <title>모모런</title>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="js/confetti.browser.min.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/html2canvas.min.js"></script>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -30,44 +79,79 @@
         <small>NOA WALKING LOG</small>
       </div>
     </div>
-    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
-      <a href="momotalk.html" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:10px; font-weight:800; padding:4px 8px; border-radius:12px; text-decoration:none; display:flex; align-items:center; gap:4px;">
+    <div class="toolbar" aria-label="상단 빠른 메뉴">
+      <a href="momotalk.html" class="toolbar-chip toolbar-link">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
         모모톡 LITE
       </a>
-      <a href="#" id="dev-btn" style="color:rgba(255,255,255,0.3); font-size:10px; font-weight:800; text-decoration:none; cursor:pointer;">[DEV]</a>
-      <div id="weather-box" style="display:none; align-items:center; gap:4px; font-weight:800; font-size:12px; color:#fff; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
-        <span id="weather-icon">--</span>
-        <span id="weather-temp">--°C</span>
-      </div>
-      <div id="pyroxene-btn" style="display:flex; align-items:center; gap:4px; font-weight:800; font-size:12px; color:#7dd3fc; background:rgba(125,211,252,0.15); padding:4px 8px; border-radius:12px; border:1px solid rgba(125,211,252,0.3); cursor:pointer;">
+      <a href="#" id="dev-btn" class="dev-link">[DEV]</a>
+      <button id="weather-btn" class="toolbar-chip weather-chip" type="button" aria-label="현재 위치 날씨 불러오기">
+        <span id="weather-icon">날씨</span>
+        <span id="weather-temp">확인</span>
+      </button>
+      <button id="pyroxene-btn" class="toolbar-chip pyroxene-chip" type="button" aria-label="상점 열기">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="rgba(255,255,255,0.5)" stroke-width="1"><polygon points="12,2 22,8 22,16 12,22 2,16 2,8"/></svg>
         <span id="pyroxene-count">0</span>
-      </div>
-      <div class="date" id="date" style="margin-left:4px;">—</div>
-      <button id="momotalk-btn" class="icon-btn" aria-label="모모톡" style="background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; display:flex;">
+      </button>
+      <div class="date" id="date">—</div>
+      <button id="momotalk-btn" class="icon-btn" aria-label="모모톡">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
       </button>
-      <button id="achievements-btn" class="icon-btn" aria-label="업적" style="background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; display:flex;">
+      <button id="achievements-btn" class="icon-btn" aria-label="업적">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
       </button>
-      <button id="settings-btn" class="icon-btn" aria-label="설정" style="background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; display:flex;">
+      <button id="settings-btn" class="icon-btn" aria-label="설정">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       </button>
     </div>
   </header>
 
-  <div class="hero-space"></div>
+  <div class="hero-space" aria-hidden="true"></div>
 
 	  <div class="panel">
-      <div class="desktop-grid">
-        <!-- 좌측 컬럼 (메인 산책 측정 영역) -->
-        <div class="left-col">
-          <div class="hero-name">N O A <span id="rankBadge" style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:8px; background:rgba(167,139,250,0.2); border:1px solid var(--violet-soft); color:#fff; vertical-align:middle;">Lv. 1 기록의 시작</span></div>
+      <!-- 결재란을 포함한 상단 타이틀바 -->
+      <div class="panel-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+        <div>
+          <div class="hero-name" style="align-self: flex-start; text-align: left; margin-bottom: 4px;">N O A <span id="rankBadge" style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:8px; background:rgba(167,139,250,0.2); border:1px solid var(--violet-soft); color:#fff; vertical-align:middle;">Lv. 1 기록의 시작</span></div>
           <div class="status-strip">
             <span id="phase">기록 준비</span>
             <b id="streakTop">연속 0일</b>
           </div>
+        </div>
+        
+        <!-- 결재란 -->
+        <div class="approval-box" style="margin-top: -6px;">
+          <table class="approval-table">
+            <tr>
+              <th rowspan="2" class="approval-title">결<br>재</th>
+              <td>담당</td>
+              <td>승인</td>
+              <td>결재</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="stamp stamp-noa">
+                  <span>밀레니엄<br>서기 노아</span>
+                </div>
+              </td>
+              <td>
+                <div class="stamp stamp-yuuka">
+                  <span>밀레니엄<br>회장 유우카</span>
+                </div>
+              </td>
+              <td id="stamp-sensei-td" style="cursor: pointer; position: relative;">
+                <div class="stamp stamp-sensei locked" id="stamp-sensei">
+                  <span>샬레<br>선생님</span>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="desktop-grid">
+        <!-- 좌측 컬럼 (메인 산책 측정 영역) -->
+        <div class="left-col">
           <div class="ring-wrap">
             <div class="ring">
               <svg width="240" height="240" viewBox="0 0 240 240">
@@ -136,40 +220,83 @@
               <button id="reset">오늘 초기화</button>
               <button id="add">+10 (테스트)</button>
             </div>
-            <button id="share-report" style="background:linear-gradient(135deg, #10b981, #059669); color:white; margin-top:4px; box-shadow:0 4px 14px rgba(16,185,129,0.3); border:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <button id="share-report" class="report-btn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               주간 활동 리포트 저장
             </button>
             <div class="goal-edit">
               목표 <input id="goal" type="number" min="100" step="100" value="10000" /> 보
             </div>
-            <div style="display:flex; gap:10px;">
-              <button id="voice" class="voice-toggle" style="flex:1;">🔈 노아 음성 꺼짐</button>
-              <button id="bgm-btn" class="voice-toggle" style="flex:1;">🎵 BGM 꺼짐</button>
+            <div class="audio-row">
+              <button id="voice" class="voice-toggle">🔈 노아 음성 꺼짐</button>
+              <button id="bgm-btn" class="voice-toggle">🎵 BGM 꺼짐</button>
             </div>
-            <div class="sensor-state"><span class="dot" id="dot"></span><span id="sensorTxt">센서 대기 중</span></div>
-          </div>
+	            <div class="sensor-state"><span class="dot" id="dot"></span><span id="sensorTxt">센서 대기 중</span></div>
+	          </div>
 
-          <div class="hint" aria-label="측정 안내" style="margin-top:10px;">
-            <div class="hint-title">센서 기록 안내</div>
-            <div class="hint-row">
-              <span class="hint-badge">권한</span>
-              <span class="hint-copy">아이폰에서 권한 창이 뜨면 "동작 및 방향 접근"을 허용해 주세요.</span>
-            </div>
-            <div class="hint-row">
-              <span class="hint-badge">기록</span>
-              <span class="hint-copy">걸음 수는 이 화면을 켜둔 동안만 기록됩니다.</span>
-            </div>
-            <div class="hint-row">
-              <span class="hint-badge">다음</span>
-              <span class="hint-copy">백그라운드 측정은 다음 네이티브 앱 단계에서 이어갑니다.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-	  </div><!-- /panel -->
+	          <div class="briefing-stack" aria-label="노아 기록 브리핑">
+	            <section class="briefing-card">
+	              <div class="briefing-kicker">오늘 요약</div>
+	              <p id="todayBrief">아직 오늘 기록이 시작되지 않았습니다.</p>
+	              <div class="source-note" id="sourceNote">출처: 기록 대기</div>
+	            </section>
+	            <section class="briefing-card">
+	              <div class="briefing-kicker">주간 리포트</div>
+	              <p id="weeklyBrief">최근 7일 기록을 정리하는 중입니다.</p>
+	              <div class="report-lines">
+	                <span id="weeklyBest">최고 기록: -</span>
+	                <span id="weeklyNext">다음 목표: -</span>
+	              </div>
+	            </section>
+	            <section class="briefing-card noa-memo-card">
+	              <div class="briefing-kicker">노아 메모</div>
+	              <p id="noaMemo">선생님의 첫 기록을 기다리고 있어요.</p>
+	            </section>
+	          </div>
 
-  <!-- 모모톡 UI -->
+	          <div class="hint setup-brief" aria-label="시작 전 점검">
+	            <div class="hint-title">시작 전 점검</div>
+	            <div class="setup-status-grid">
+	              <span id="setup-motion">동작 센서: 측정 시작 시 확인</span>
+	              <span id="setup-health">HealthKit: 선택 연동</span>
+	              <span id="setup-weather">날씨: 선택 확인</span>
+	              <span id="setup-notification">알림: 선택 예약</span>
+	            </div>
+	            <button id="setup-open" class="setup-open-btn" type="button">권한과 연동 한 번에 점검</button>
+	          </div>
+	        </div>
+	      </div>
+		  </div><!-- /panel -->
+
+	  <!-- 시작 전 점검 모달 -->
+	  <div id="setup-modal" class="modal hidden">
+	    <div class="modal-content setup-modal-content">
+	      <div class="modal-header">
+	        <h2>시작 전 점검</h2>
+	        <button class="modal-close" id="setup-close">×</button>
+	      </div>
+	      <div class="modal-body setup-modal-body">
+	        <p class="setup-intro">필수는 동작 센서뿐입니다. HealthKit, 날씨, 알림은 필요할 때만 켜도 됩니다.</p>
+	        <div class="setup-action-list">
+	          <button id="setup-motion-btn" class="setup-action" type="button">
+	            <span>동작 센서</span><b id="setup-motion-state">측정 시작 버튼에서 확인</b>
+	          </button>
+	          <button id="setup-health-btn" class="setup-action" type="button">
+	            <span>HealthKit</span><b id="setup-health-state">선택 연동</b>
+	          </button>
+	          <button id="setup-weather-btn" class="setup-action" type="button">
+	            <span>현재 날씨</span><b id="setup-weather-state">선택 확인</b>
+	          </button>
+	          <button id="setup-notification-btn" class="setup-action" type="button">
+	            <span>기록 알림</span><b id="setup-notification-state">선택 예약</b>
+	          </button>
+	        </div>
+	        <button id="setup-done" class="btn-main setup-done-btn" type="button">점검 완료</button>
+	      </div>
+	    </div>
+	  </div>
+
+	  <!-- 모모톡 UI -->
   <div id="momotalk-toast" class="momotalk-toast hidden">
     <div class="momotalk-header">
       <img src="icon-192.png" alt="Noa" class="momotalk-avatar">
@@ -199,28 +326,51 @@
         </div>
         <p class="settings-hint" style="margin-bottom:8px;">입력하신 신체 정보는 보폭(거리)과 칼로리(METs)를 정확히 계산하는 데 사용되며 기기에만 저장됩니다.</p>
         <div class="input-group">
-          <label for="elevenlabs-key" style="color:var(--violet-soft);">ElevenLabs API Key (고급)</label>
+          <label for="gemini-key" style="color:#7dd3fc;">Gemini API Key (대화용)</label>
+          <input type="password" id="gemini-key" placeholder="API Key 입력 시 모모톡 실시간 대화">
+        </div>
+        <div class="input-group" style="margin-top:-8px;">
+          <label for="elevenlabs-key" style="color:var(--violet-soft);">ElevenLabs API Key (음성용)</label>
           <input type="password" id="elevenlabs-key" placeholder="API Key 입력 시 진짜 AI 음성 생성">
         </div>
         <div class="input-group">
           <label for="elevenlabs-voice">ElevenLabs Voice ID</label>
           <input type="text" id="elevenlabs-voice" placeholder="노아 Voice ID">
         </div>
-        <p class="settings-hint">API를 연결하면 실제 인게임과 똑같은 음성을 실시간으로 들려줍니다.</p>
+        <p class="settings-hint">각각의 API 키를 연결하면 노아와 실시간 음성 및 대화로 교감할 수 있습니다.</p>
       </div>
     </div>
   </div>
 
-  <!-- 모모톡 히스토리 모달 -->
+  <!-- 모모톡 히스토리 모달 (AI 대화 겸용) -->
   <div id="momotalk-history-modal" class="modal hidden">
-    <div class="modal-content" style="max-height: 80vh; display: flex; flex-direction: column;">
+    <div class="modal-content" style="max-height: 90vh; width: 95%; max-width: 440px; display: flex; flex-direction: column;">
       <div class="modal-header" style="background:rgba(0,0,0,0.3); border-bottom:1px solid rgba(125,211,252,0.1);">
         <h2 style="color:#7dd3fc; display:flex; align-items:center; gap:8px;">
-          <img src="icon-192.png" width="24" height="24" style="border-radius:50%; border:1px solid rgba(125,211,252,0.3); margin:0;"> 모모톡 기록
+          <img src="icon-192.png" width="24" height="24" style="border-radius:50%; border:1px solid rgba(125,211,252,0.3); margin:0;"> 모모톡 - 우시오 노아
         </h2>
         <button class="modal-close" id="momotalk-history-close" style="color:#7dd3fc;">×</button>
       </div>
-      <div class="modal-body" id="momotalk-history-list" style="overflow-y:auto; flex:1; background:transparent; display:flex; flex-direction:column; gap:12px; padding:16px;">
+      
+      <!-- 탭 컨트롤 -->
+      <div class="momotalk-tabs">
+        <div class="momotalk-tab active" id="tab-chat">노아와 대화</div>
+        <div class="momotalk-tab" id="tab-log">이벤트 기록</div>
+      </div>
+      
+      <!-- 1. AI 메신저 대화 뷰 -->
+      <div id="momotalk-chat-view" class="momotalk-chat-view">
+        <div id="momotalk-chat-messages" class="momotalk-chat-messages">
+          <!-- JS로 채워짐 -->
+        </div>
+        <div class="momotalk-chat-input-area">
+          <input type="text" id="momotalk-chat-input" placeholder="메시지를 입력하세요..." />
+          <button id="momotalk-chat-send">전송</button>
+        </div>
+      </div>
+      
+      <!-- 2. 기존 이벤트 로그 뷰 -->
+      <div id="momotalk-log-view" style="overflow-y:auto; flex:1; background:transparent; display:none; flex-direction:column; gap:12px; padding:16px;">
         <!-- JS로 채워짐 -->
       </div>
     </div>
@@ -276,6 +426,7 @@
 
 </div>
 
-<script src="js/app.js"></script>
+<script src="js/core.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>

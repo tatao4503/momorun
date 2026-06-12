@@ -1,26 +1,26 @@
 (() => {
   const $ = id => document.getElementById(id);
-  const CIRC = 2 * Math.PI * 106; // ≈ 666
+  const C = window.NoaCore;
+  const CIRC = C.CIRC;
 
   const state = {
     steps: 0,
     goal: 10000,
     running: false,
-    lastStepTime: 0
+    currentDateKey: null,
+    sources: { sensor: 0, health: 0, test: 0, dev: 0 }
   };
 
-  const STORAGE_PREFIX = 'noa-manbogi-';
-  const pad = n => String(n).padStart(2, '0');
-  const dateKey = d => `${STORAGE_PREFIX}${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  const legacyDateKey = d => `${STORAGE_PREFIX}${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-  const todayKey = () => dateKey(new Date());
-
-  function parseRecord(key) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch (_) { return null; }
+  // 공통 저장/날짜 헬퍼는 core.js(NoaCore)에서 가져온다.
+  const { legacyDateKey, todayKey, parseRecord } = C;
+  const emptySources = () => ({ sensor: 0, health: 0, test: 0, dev: 0 });
+  function normalizeSources(sources) {
+    return {
+      sensor: Math.max(0, +(sources && sources.sensor) || 0),
+      health: Math.max(0, +(sources && sources.health) || 0),
+      test: Math.max(0, +(sources && sources.test) || 0),
+      dev: Math.max(0, +(sources && sources.dev) || 0),
+    };
   }
 
   // DOM Caching
@@ -38,7 +38,13 @@
   let saveTimer = null;
   function saveNow() {
     clearTimeout(saveTimer);
-    localStorage.setItem(todayKey(), JSON.stringify({ steps: state.steps, goal: state.goal }));
+    localStorage.setItem(todayKey(), JSON.stringify({
+      steps: state.steps,
+      goal: state.goal,
+      sources: normalizeSources(state.sources),
+      lastSource: state.steps > 0 ? 'sensor' : '',
+      updatedAt: new Date().toISOString(),
+    }));
   }
   function save() {
     clearTimeout(saveTimer);
@@ -47,9 +53,14 @@
   window.addEventListener('beforeunload', saveNow);
 
   function load() {
+    state.currentDateKey = todayKey();
     const saved = parseRecord(todayKey()) || parseRecord(legacyDateKey(new Date()));
     state.steps = saved ? Math.max(0, +saved.steps || 0) : 0;
     state.goal = saved ? Math.max(100, +saved.goal || 10000) : +(localStorage.getItem('noa-manbogi-goal') || 10000);
+    state.sources = saved ? normalizeSources(saved.sources) : emptySources();
+    if (state.steps > 0 && Object.values(state.sources).every(v => v === 0)) {
+      state.sources.sensor = state.steps;
+    }
     applyPurchasedItems();
     render();
   }
@@ -65,39 +76,22 @@
   }
 
   function addSteps(n) {
-    state.steps += n;
+    const nowKey = todayKey();
+    if (state.currentDateKey && state.currentDateKey !== nowKey) {
+      state.currentDateKey = nowKey;
+      state.steps = 0;
+      state.sources = emptySources();
+    }
+    const add = Math.max(0, Math.round(+n || 0));
+    state.steps += add;
+    state.sources.sensor += add;
     render();
     save();
   }
 
-  // --- Step Detection ---
-  let lastMag = 0, smoothed = 0, rising = false, peak = 0, valley = 99;
-  function onMotion(e) {
-    const a = e.accelerationIncludingGravity;
-    if (!a) return;
-    const mag = Math.sqrt((a.x||0)**2 + (a.y||0)**2 + (a.z||0)**2);
-    smoothed = smoothed * 0.8 + mag * 0.2;
-
-    const now = e.timeStamp || performance.now();
-    if (smoothed > lastMag) {
-      rising = true;
-      peak = smoothed;
-    } else if (smoothed < lastMag && rising) {
-      rising = false;
-      const amplitude = peak - valley;
-      const gap = now - state.lastStepTime;
-      if (amplitude > 1.2 && gap > 250 && gap < 2000) {
-        state.lastStepTime = now;
-        addSteps(1);
-        pulse();
-      } else if (amplitude > 1.2) {
-        state.lastStepTime = now;
-      }
-      valley = smoothed;
-    }
-    if (smoothed < valley) valley = smoothed;
-    lastMag = smoothed;
-  }
+  // --- Step Detection (공유 코어 감지기) ---
+  const stepDetector = C.createStepDetector(() => { addSteps(1); pulse(); });
+  const onMotion = e => stepDetector.handle(e);
 
   let pulseT;
   function pulse() {
@@ -165,106 +159,5 @@
     }, 3000);
   }
 
-  async function syncHealthKit() {
-    if (window.Capacitor && window.Capacitor.isNative && window.Capacitor.Plugins.Health) {
-      try {
-        const Health = window.Capacitor.Plugins.Health;
-        if (typeof Health.isAvailable === 'function') {
-          const avail = await Health.isAvailable();
-          if (!avail.available) return;
-        }
-        if (typeof Health.requestAuthorization === 'function') {
-          await Health.requestAuthorization({
-            read: ['steps'],
-            write: []
-          });
-        } else if (typeof Health.requestPermissions === 'function') {
-          await Health.requestPermissions({
-            read: ['steps']
-          });
-        }
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        let hkSteps = 0;
-        if (typeof Health.queryAggregated === 'function') {
-          const res = await Health.queryAggregated({
-            dataType: 'steps',
-            startDate: today.toISOString(),
-            endDate: tomorrow.toISOString(),
-            bucket: 'day'
-          });
-          if (res && res.samples) {
-            res.samples.forEach(s => {
-              if (s.value) hkSteps += s.value;
-            });
-          }
-        } else if (typeof Health.query === 'function') {
-          const res = await Health.query({
-            startDate: today.toISOString(),
-            endDate: tomorrow.toISOString(),
-            dataType: 'steps',
-            limit: 1000
-          });
-          if (res && res.entries) {
-            res.entries.forEach(e => hkSteps += e.value);
-          }
-        }
-        
-        hkSteps = Math.round(hkSteps);
-        if (hkSteps > state.steps) {
-          state.steps = hkSteps;
-          render();
-          save();
-          showToast(`건강 앱 동기화: ${hkSteps.toLocaleString()}보`);
-        }
-      } catch (err) {
-        console.error("HealthKit 동기화 실패:", err);
-      }
-    }
-  }
-
-  async function initBackgroundTasks() {
-    if (window.Capacitor && window.Capacitor.isNative && window.Capacitor.Plugins.BackgroundTask) {
-      try {
-        const BackgroundTask = window.Capacitor.Plugins.BackgroundTask;
-        const SYNC_TASK = 'app.capgo.backgroundtask.processing';
-        BackgroundTask.defineTask(SYNC_TASK, async () => {
-          try {
-            await syncHealthKit();
-            return 1;
-          } catch (e) {
-            return 0;
-          }
-        });
-        await BackgroundTask.registerTaskAsync(SYNC_TASK, {
-          minimumInterval: 30,
-          requiresNetwork: false
-        });
-      } catch (err) {}
-    }
-  }
-
-  function setupAppLifecycle() {
-    if (window.Capacitor && window.Capacitor.isNative) {
-      const App = window.Capacitor.Plugins.App;
-      if (App && typeof App.addListener === 'function') {
-        App.addListener('appStateChange', (state) => {
-          if (state.isActive) {
-            syncHealthKit();
-          }
-        });
-      }
-    }
-    document.addEventListener('resume', () => {
-      syncHealthKit();
-    });
-  }
-
   load();
-  syncHealthKit();
-  initBackgroundTasks();
-  setupAppLifecycle();
 })();

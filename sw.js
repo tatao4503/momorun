@@ -1,9 +1,10 @@
-const CACHE_NAME = 'noa-manbogi-v9';
+const CACHE_NAME = 'noa-manbogi-v23';
 const APP_ASSETS = [
   './',
   './index.html',
   './momotalk.html',
   './css/style.css',
+  './js/core.js',
   './js/app.js',
   './css/lite.css',
   './js/lite.js',
@@ -18,6 +19,9 @@ const APP_ASSETS = [
   './noa3-desktop.jpg',
   './icon-192.png',
   './icon-512.png',
+  './js/confetti.browser.min.js',
+  './js/chart.js',
+  './js/html2canvas.min.js',
 ];
 
 self.addEventListener('install', event => {
