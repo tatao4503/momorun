@@ -16,15 +16,23 @@
     --ink: rgba(7,10,26,0.42);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-	  html, body { margin: 0; height: 100%; overflow-x: hidden; }
+	  html {
+	    margin: 0;
+	    min-height: 100%;
+	    height: auto;
+	    overflow-x: hidden;
+	    overflow-y: auto;
+	  }
   body {
+    margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
     color: var(--text);
     background: var(--bg);
-    min-height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto;
+    display: block;
+    overflow-x: hidden;
   }
   /* Noa artwork background (responsive: portrait on phones, landscape on wide screens) */
   body::before {
@@ -914,4 +922,14 @@
     font-size: 13px;
     color: #fff;
     line-height: 1.4;
+  }
+  .history-empty {
+    text-align: center;
+    color: #fb7299;
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  .typing-bubble {
+    font-style: italic;
+    opacity: 0.7;
   }

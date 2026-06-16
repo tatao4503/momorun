@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#12162f" />
+<title>모모런 - 팬레터 데모</title>
+<link rel="stylesheet" href="css/fanmail.css?v=1" />
+</head>
+<body>
+<main class="mail-app">
+  <header class="mail-header">
+    <a class="back-link" href="index.html?v=28" aria-label="풀버전으로 돌아가기">
+      <span aria-hidden="true">‹</span>
+      풀버전
+    </a>
+    <div class="status-pill">비공식 · 비상업 팬 데모</div>
+  </header>
+
+  <section class="hero">
+    <div class="noa-halo" aria-hidden="true">
+      <span class="halo-outer"></span>
+      <span class="halo-inner"></span>
+      <span class="halo-chip left"></span>
+      <span class="halo-chip right"></span>
+    </div>
+    <p class="eyebrow">FAN LETTER EDITION</p>
+    <h1>모모런</h1>
+    <p class="hero-copy">걸음 수를 노아의 기록장처럼 정리해보는 개인 팬 프로젝트입니다.</p>
+  </section>
+
+  <section class="tracker-panel" aria-label="걸음 기록">
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 240 240" aria-hidden="true">
+        <circle cx="120" cy="120" r="106" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="16"/>
+        <circle id="progress" cx="120" cy="120" r="106" fill="none" stroke="url(#mailGradient)" stroke-width="16"
+                stroke-linecap="round" stroke-dasharray="666" stroke-dashoffset="666"/>
+        <defs>
+          <linearGradient id="mailGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#c4b5fd"/>
+            <stop offset="100%" stop-color="#7dd3fc"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="ring-center">
+        <strong id="steps">0</strong>
+        <span>걸음</span>
+      </div>
+    </div>
+    <p id="goalText" class="goal-text">목표 8,000보까지 8,000보 남음</p>
+    <div class="actions">
+      <button id="toggle" class="primary-btn" type="button">기록 시작</button>
+      <button id="sample" class="ghost-btn" type="button">샘플 기록 추가</button>
+    </div>
+    <div class="sensor-line">
+      <span id="sensorDot" class="dot"></span>
+      <span id="sensorText">센서 대기 중</span>
+    </div>
+  </section>
+
+  <section class="brief-grid" aria-label="팬레터 데모 요약">
+    <article class="brief-card">
+      <span class="kicker">오늘 요약</span>
+      <p id="todayBrief">아직 오늘 기록이 시작되지 않았습니다.</p>
+      <small id="sourceNote">출처: 기록 대기</small>
+    </article>
+    <article class="brief-card">
+      <span class="kicker">노아 메모</span>
+      <p id="noaMemo">선생님의 산책 기록을 조용히 정리해둘 준비가 되어 있습니다.</p>
+    </article>
+  </section>
+
+  <section class="week-panel" aria-label="최근 7일 기록">
+    <div class="section-title">
+      <span>최근 7일 기록</span>
+      <b id="weekTotal">0보</b>
+    </div>
+    <div id="weekStamps" class="week-stamps"></div>
+    <div id="weekBars" class="week-bars"></div>
+  </section>
+
+  <section class="notice-panel" aria-label="팬 창작 안내">
+    <h2>메일 공유용 안내</h2>
+    <ul>
+      <li>이 페이지는 비공식, 비상업 팬 데모입니다.</li>
+      <li>게임 내 경제나 수익화로 오해될 수 있는 기능은 포함하지 않았습니다.</li>
+      <li>걸음 기록은 이 브라우저 안에만 저장되며 계정 정보나 서버 전송을 사용하지 않습니다.</li>
+      <li>Blue Archive 및 관련 캐릭터 권리는 각 권리자에게 있습니다.</li>
+    </ul>
+  </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/core.js?v=28"></script>
+<script src="js/fanmail.js?v=1"></script>
+</body>
+</html>

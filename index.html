@@ -1,55 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<script>
-  window.onerror = function(msg, url, line, col, error) {
-    var div = document.getElementById('debug-err-console') || document.createElement('div');
-    div.id = 'debug-err-console';
-    div.style.position = 'fixed';
-    div.style.bottom = '0';
-    div.style.left = '0';
-    div.style.width = '100%';
-    div.style.background = 'rgba(239, 68, 68, 0.95)';
-    div.style.color = '#fff';
-    div.style.padding = '12px';
-    div.style.fontSize = '12px';
-    div.style.zIndex = '9999999';
-    div.style.maxHeight = '150px';
-    div.style.overflowY = 'auto';
-    div.style.fontFamily = 'monospace';
-    div.style.wordBreak = 'break-all';
-    div.innerHTML = '<strong>JS Error:</strong> ' + msg + '<br>at ' + url + ':' + line + ':' + col + (error && error.stack ? '<br>' + error.stack : '');
-    if (!document.body) {
-      window.addEventListener('DOMContentLoaded', function() { document.body.appendChild(div); });
-    } else {
-      document.body.appendChild(div);
-    }
-    return false;
-  };
-  window.addEventListener('unhandledrejection', function(event) {
-    var div = document.getElementById('debug-err-console') || document.createElement('div');
-    div.id = 'debug-err-console';
-    div.style.position = 'fixed';
-    div.style.bottom = '0';
-    div.style.left = '0';
-    div.style.width = '100%';
-    div.style.background = 'rgba(245, 158, 11, 0.95)';
-    div.style.color = '#fff';
-    div.style.padding = '12px';
-    div.style.fontSize = '12px';
-    div.style.zIndex = '9999999';
-    div.style.maxHeight = '150px';
-    div.style.overflowY = 'auto';
-    div.style.fontFamily = 'monospace';
-    div.style.wordBreak = 'break-all';
-    div.innerHTML = '<strong>Promise Reject:</strong> ' + event.reason;
-    if (!document.body) {
-      window.addEventListener('DOMContentLoaded', function() { document.body.appendChild(div); });
-    } else {
-      document.body.appendChild(div);
-    }
-  });
-</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#12162f" />
@@ -62,7 +13,7 @@
 <script src="js/confetti.browser.min.js"></script>
 <script src="js/chart.js"></script>
 <script src="js/html2canvas.min.js"></script>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css?v=28" />
 </head>
 <body>
 <div class="app">
@@ -83,6 +34,9 @@
       <a href="momotalk.html" class="toolbar-chip toolbar-link">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
         모모톡 LITE
+      </a>
+      <a href="fanmail.html" class="toolbar-chip toolbar-link">
+        팬레터 데모
       </a>
       <a href="#" id="dev-btn" class="dev-link">[DEV]</a>
       <button id="weather-btn" class="toolbar-chip weather-chip" type="button" aria-label="현재 위치 날씨 불러오기">
@@ -430,7 +384,7 @@
 
 </div>
 
-<script src="js/core.js"></script>
-<script type="module" src="js/app.js"></script>
+<script src="js/core.js?v=28"></script>
+<script type="module" src="js/app.js?v=28"></script>
 </body>
 </html>

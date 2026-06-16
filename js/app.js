@@ -1,5 +1,55 @@
 (() => {
   const $ = id => document.getElementById(id);
+
+  function installDevErrorOverlay() {
+    const params = new URLSearchParams(window.location.search);
+    const enabled = params.has('debug') || localStorage.getItem('noa-dev-error-overlay') === '1';
+    if (!enabled) return;
+
+    function showDebugOverlay(title, details, level = 'error') {
+      const div = document.getElementById('debug-err-console') || document.createElement('div');
+      div.id = 'debug-err-console';
+      div.textContent = '';
+      Object.assign(div.style, {
+        position: 'fixed',
+        bottom: '0',
+        left: '0',
+        width: '100%',
+        background: level === 'promise' ? 'rgba(245, 158, 11, 0.95)' : 'rgba(239, 68, 68, 0.95)',
+        color: '#fff',
+        padding: '12px',
+        fontSize: '12px',
+        zIndex: '9999999',
+        maxHeight: '150px',
+        overflowY: 'auto',
+        fontFamily: 'monospace',
+        wordBreak: 'break-all',
+      });
+
+      const strong = document.createElement('strong');
+      strong.textContent = title;
+      div.appendChild(strong);
+      div.appendChild(document.createElement('br'));
+      div.appendChild(document.createTextNode(details));
+
+      const attach = () => {
+        if (!div.parentNode) document.body.appendChild(div);
+      };
+      if (document.body) attach();
+      else window.addEventListener('DOMContentLoaded', attach, { once: true });
+    }
+
+    window.addEventListener('error', event => {
+      const stack = event.error && event.error.stack ? `\n${event.error.stack}` : '';
+      showDebugOverlay('JS Error:', `${event.message}\nat ${event.filename}:${event.lineno}:${event.colno}${stack}`);
+    });
+    window.addEventListener('unhandledrejection', event => {
+      showDebugOverlay('Promise Reject:', String(event.reason), 'promise');
+    });
+  }
+
+  installDevErrorOverlay();
+
   const C = window.NoaCore;
   const CIRC = C.CIRC;
 
@@ -1127,52 +1177,81 @@
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  function renderChat() {
-    const list = $('momotalk-chat-messages');
-    if (!list) return;
-    list.innerHTML = chatHistory.map(c => {
-      const isSelf = c.sender === 'self';
-      const rowClass = isSelf ? 'chat-bubble-row self' : 'chat-bubble-row';
-      const senderName = isSelf ? '선생님' : '노아';
-      const avatarHtml = isSelf ? '' : `<img src="icon-192.png" alt="Noa" class="chat-avatar">`;
-      const nameHtml = isSelf ? '' : `<div class="chat-sender-name">${senderName}</div>`;
-      
-      return `
-        <div class="${rowClass}">
-          ${avatarHtml}
-          <div class="chat-msg-container">
-            ${nameHtml}
-            <div class="chat-bubble-wrapper">
-              <div class="chat-bubble">${c.msg}</div>
-              <div class="chat-time">${formatTime(c.time)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-    list.scrollTop = list.scrollHeight;
-  }
+	  function renderChat() {
+	    const list = $('momotalk-chat-messages');
+	    if (!list) return;
+	    list.textContent = '';
+	    chatHistory.forEach(c => {
+	      const isSelf = c.sender === 'self';
+	      const row = document.createElement('div');
+	      row.className = isSelf ? 'chat-bubble-row self' : 'chat-bubble-row';
+
+	      if (!isSelf) {
+	        const avatar = document.createElement('img');
+	        avatar.src = 'icon-192.png';
+	        avatar.alt = 'Noa';
+	        avatar.className = 'chat-avatar';
+	        row.appendChild(avatar);
+	      }
+
+	      const container = document.createElement('div');
+	      container.className = 'chat-msg-container';
+	      if (!isSelf) {
+	        const name = document.createElement('div');
+	        name.className = 'chat-sender-name';
+	        name.textContent = '노아';
+	        container.appendChild(name);
+	      }
+
+	      const wrapper = document.createElement('div');
+	      wrapper.className = 'chat-bubble-wrapper';
+
+	      const bubble = document.createElement('div');
+	      bubble.className = 'chat-bubble';
+	      bubble.textContent = c.msg || '';
+
+	      const time = document.createElement('div');
+	      time.className = 'chat-time';
+	      time.textContent = formatTime(c.time);
+
+	      wrapper.appendChild(bubble);
+	      wrapper.appendChild(time);
+	      container.appendChild(wrapper);
+	      row.appendChild(container);
+	      list.appendChild(row);
+	    });
+	    list.scrollTop = list.scrollHeight;
+	  }
 
   function renderLogs() {
     const list = $('momotalk-log-view');
     if (!list) return;
-    let hist = [];
-    try { hist = JSON.parse(localStorage.getItem('noa-momotalk-hist')) || []; } catch(e) {}
-    if (hist.length === 0) {
-      list.innerHTML = '<div style="text-align:center; color:#fb7299; margin-top:20px; font-weight:bold;">아직 기록된 대화가 없습니다.</div>';
-    } else {
-      list.innerHTML = hist.map(h => {
-        const d = new Date(h.time);
-        const dateStr = `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        return `
-          <div class="history-item">
-            <div class="history-item-time">${dateStr}</div>
-            <div class="history-item-msg">${h.msg}</div>
-          </div>
-        `;
-      }).reverse().join('');
-    }
-  }
+	    let hist = [];
+	    try { hist = JSON.parse(localStorage.getItem('noa-momotalk-hist')) || []; } catch(e) {}
+	    list.textContent = '';
+	    if (hist.length === 0) {
+	      const empty = document.createElement('div');
+	      empty.className = 'history-empty';
+	      empty.textContent = '아직 기록된 대화가 없습니다.';
+	      list.appendChild(empty);
+	    } else {
+	      hist.slice().reverse().forEach(h => {
+	        const d = new Date(h.time);
+	        const dateStr = `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+	        const item = document.createElement('div');
+	        item.className = 'history-item';
+	        const time = document.createElement('div');
+	        time.className = 'history-item-time';
+	        time.textContent = dateStr;
+	        const msg = document.createElement('div');
+	        msg.className = 'history-item-msg';
+	        msg.textContent = h.msg || '';
+	        item.appendChild(time);
+	        item.appendChild(msg);
+	        list.appendChild(item);
+	      });
+	    }
+	  }
 
   function getSystemPrompt() {
     const height = +(localStorage.getItem('noa-user-height') || 170);
@@ -1268,15 +1347,27 @@
     const typingRow = document.createElement('div');
     typingRow.id = typingId;
     typingRow.className = 'chat-bubble-row';
-    typingRow.innerHTML = `
-      <img src="icon-192.png" alt="Noa" class="chat-avatar">
-      <div class="chat-msg-container">
-        <div class="chat-sender-name">노아</div>
-        <div class="chat-bubble-wrapper">
-          <div class="chat-bubble" style="font-style: italic; opacity: 0.7;">노아가 입력 중입니다...</div>
-        </div>
-      </div>
-    `;
+
+    const avatar = document.createElement('img');
+    avatar.src = 'icon-192.png';
+    avatar.alt = 'Noa';
+    avatar.className = 'chat-avatar';
+    typingRow.appendChild(avatar);
+
+    const container = document.createElement('div');
+    container.className = 'chat-msg-container';
+    const name = document.createElement('div');
+    name.className = 'chat-sender-name';
+    name.textContent = '노아';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chat-bubble-wrapper';
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble typing-bubble';
+    bubble.textContent = '노아가 입력 중입니다...';
+    wrapper.appendChild(bubble);
+    container.appendChild(name);
+    container.appendChild(wrapper);
+    typingRow.appendChild(container);
     list.appendChild(typingRow);
     list.scrollTop = list.scrollHeight;
     
@@ -1459,24 +1550,25 @@
 
   // --- 리포트 공유 시스템 ---
   if ($('share-report')) {
-    $('share-report').onclick = async () => {
-      if (typeof html2canvas === 'undefined') {
-        showMomotalk("결재 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
-        return;
-      }
-      showMomotalk("결재 서류를 작성 중입니다... 잠시만 기다려주세요!");
-      
-      try {
-        const panel = document.querySelector('.panel');
-        // HTML2Canvas backdrop-filter 렌더링 오류 방지를 위한 임시 단색 배경
-        const oldBackground = panel.style.background;
-        panel.style.background = '#1a2144';
-        
-        // 캡처 시 불필요한 컨트롤 버튼 숨김
-        const controls = document.querySelectorAll('.controls, #momotalk-btn, #achievements-btn, #settings-btn, #pyroxene-btn');
-        controls.forEach(c => {
-            if(c) {
-                c.dataset.oldDisplay = c.style.display;
+	    $('share-report').onclick = async () => {
+	      if (typeof html2canvas === 'undefined') {
+	        showMomotalk("결재 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+	        return;
+	      }
+	      showMomotalk("결재 서류를 작성 중입니다... 잠시만 기다려주세요!");
+	      const panel = document.querySelector('.panel');
+	      const controls = document.querySelectorAll('.controls, #momotalk-btn, #achievements-btn, #settings-btn, #pyroxene-btn');
+	      const oldBackground = panel ? panel.style.background : '';
+
+	      try {
+	        if (!panel) throw new Error('Report panel not found');
+	        // HTML2Canvas backdrop-filter 렌더링 오류 방지를 위한 임시 단색 배경
+	        panel.style.background = '#1a2144';
+	        
+	        // 캡처 시 불필요한 컨트롤 버튼 숨김
+	        controls.forEach(c => {
+	            if(c) {
+	                c.dataset.oldDisplay = c.style.display;
                 c.style.display = 'none';
             }
         });
@@ -1491,25 +1583,26 @@
           useCORS: true,
           border: 0
         });
-        
-        // 복구
-        panel.style.background = oldBackground;
-        controls.forEach(c => {
-            if(c) c.style.display = c.dataset.oldDisplay || '';
-        });
-        
-        const link = document.createElement('a');
-        link.download = `noa-schale-report-${todayKey()}.png`;
-        link.href = canvas.toDataURL('image/png');
+	        const link = document.createElement('a');
+	        link.download = `noa-schale-report-${todayKey()}.png`;
+	        link.href = canvas.toDataURL('image/png');
         link.click();
         
         setTimeout(() => showMomotalk("주간 활동 리포트가 기기에 저장되었습니다!"), 500);
-      } catch (e) {
-        showMomotalk("리포트 작성에 실패했습니다.");
-        console.error(e);
-      }
-    };
-  }
+	      } catch (e) {
+	        showMomotalk("리포트 작성에 실패했습니다.");
+	        console.error(e);
+	      } finally {
+	        if (panel) panel.style.background = oldBackground;
+	        controls.forEach(c => {
+	          if (c) {
+	            c.style.display = c.dataset.oldDisplay || '';
+	            delete c.dataset.oldDisplay;
+	          }
+	        });
+	      }
+	    };
+	  }
 
   // --- 결재 도장(직인) 상호작용 ---
   const senseiTd = $('stamp-sensei-td');
