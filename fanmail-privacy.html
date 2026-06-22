@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#12162f" />
+<title>모모런 - 팬레터 데모 개인정보 안내</title>
+<style>
+  :root {
+    --bg: #10152f;
+    --panel: rgba(13, 18, 42, 0.76);
+    --line: rgba(125, 211, 252, 0.22);
+    --text: #f1f5ff;
+    --muted: #b8c5e8;
+    --cyan: #7dd3fc;
+    --violet: #c4b5fd;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    color: var(--text);
+    background:
+      linear-gradient(180deg, rgba(16, 21, 47, 0.58), rgba(16, 21, 47, 0.96)),
+      url("noa-desktop.jpg") center / cover fixed no-repeat,
+      var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
+  }
+
+  main {
+    width: min(100%, 720px);
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 24px 18px 42px;
+    display: grid;
+    align-content: center;
+    gap: 14px;
+  }
+
+  .panel {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 18px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03)),
+      var(--panel);
+    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(16px) saturate(126%);
+    -webkit-backdrop-filter: blur(16px) saturate(126%);
+    padding: 22px;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  .back-link {
+    width: max-content;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 32px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(125, 211, 252, 0.26);
+    background: rgba(125, 211, 252, 0.12);
+    color: #e6f8ff;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 850;
+  }
+
+  h1 {
+    margin: 14px 0 8px;
+    font-size: clamp(28px, 8vw, 44px);
+    line-height: 1.05;
+    letter-spacing: 0;
+  }
+
+  .lead {
+    margin: 0 0 18px;
+    color: #e3eaff;
+    font-size: 15px;
+    line-height: 1.55;
+    font-weight: 700;
+  }
+
+  .grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .item {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 12px;
+    padding: 13px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .item b {
+    color: var(--cyan);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .item span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.55;
+    font-weight: 700;
+  }
+
+  .rights {
+    margin: 16px 0 0;
+    color: var(--violet);
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 800;
+  }
+
+  @media (max-width: 520px) {
+    body {
+      background-image:
+        linear-gradient(180deg, rgba(16, 21, 47, 0.48), rgba(16, 21, 47, 0.96)),
+        url("noa-mobile.jpg");
+    }
+
+    .item {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  }
+</style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <a class="back-link" href="fanmail.html?reset=1">
+      <span aria-hidden="true">‹</span>
+      팬레터 데모로 돌아가기
+    </a>
+
+    <h1>팬레터 데모 개인정보 안내</h1>
+    <p class="lead">이 페이지는 공식 제출 전 오해를 줄이기 위해, 메일 공유용 데모의 데이터 사용 범위만 따로 정리한 안내입니다.</p>
+
+    <div class="grid" aria-label="데이터 안내">
+      <article class="item">
+        <b>서버 전송 없음</b>
+        <span>팬레터 데모는 계정 로그인, 자체 서버, 원격 데이터베이스를 사용하지 않습니다.</span>
+      </article>
+      <article class="item">
+        <b>로컬 저장</b>
+        <span>걸음 수와 최근 7일 기록은 현재 브라우저의 localStorage에만 저장됩니다.</span>
+      </article>
+      <article class="item">
+        <b>센서 권한</b>
+        <span>기록 시작 버튼을 누른 뒤 브라우저가 허용하는 경우에만 동작 센서를 사용합니다.</span>
+      </article>
+      <article class="item">
+        <b>샘플 기록</b>
+        <span>샘플 기록 추가 버튼은 화면 설명용 가상 걸음 수를 현재 브라우저에만 더합니다.</span>
+      </article>
+      <article class="item">
+        <b>제외 기능</b>
+        <span>메일용 데모에는 결제, 광고, 게임 재화, AI API Key, 음성 합성, 위치 기반 날씨 기능을 포함하지 않았습니다.</span>
+      </article>
+    </div>
+
+    <p class="rights">Blue Archive 및 관련 캐릭터 권리는 각 권리자에게 있으며, 본 데모는 비공식 비상업 팬 창작물입니다.</p>
+  </section>
+</main>
+</body>
+</html>

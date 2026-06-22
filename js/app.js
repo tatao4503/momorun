@@ -120,14 +120,22 @@
 
   function getLifetimeSteps() {
     if (cachedBaseLifetimeSteps === null) {
-      let base = 0;
-      const todayStr = dateKey(new Date());
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k.startsWith(STORAGE_PREFIX) && k !== todayStr && k !== 'noa-manbogi-goal' && k !== 'noa-manbogi-voice') {
-          const rec = parseRecord(k);
-          if (rec) base += rec.steps;
+      let base = localStorage.getItem('noa-manbogi-lifetime-base');
+      if (base === null) {
+        // 첫 1회 마이그레이션 (O(N) 계산 후 단일 키 보관)
+        let calculatedBase = 0;
+        const todayStr = dateKey(new Date());
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k.startsWith(STORAGE_PREFIX) && k !== todayStr && k !== 'noa-manbogi-goal' && k !== 'noa-manbogi-voice') {
+            const rec = parseRecord(k);
+            if (rec) calculatedBase += rec.steps;
+          }
         }
+        localStorage.setItem('noa-manbogi-lifetime-base', calculatedBase);
+        base = calculatedBase;
+      } else {
+        base = +base || 0;
       }
       cachedBaseLifetimeSteps = base;
     }
@@ -343,9 +351,26 @@
     confetti({ particleCount: 160, spread: 75, origin: { y: 0.6 }, colors, zIndex: 9999 });
   }
 
+  // 오프라인 안전한 효과음 (Web Audio API — 외부 URL 불필요)
+  function playBeep(freq = 800, dur = 80, vol = 0.3) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      gain.gain.value = vol;
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur / 1000);
+      osc.stop(ctx.currentTime + dur / 1000);
+    } catch (_) {}
+  }
+
 	  // --- 음성 ---
 	  // 진짜 노아 보이스 클립을 쓰려면 voice/ 폴더에 mp3를 넣고 아래 맵에 "대사": "voice/파일.mp3" 추가.
 	  // 매핑이 없으면 브라우저 음성합성(TTS)으로 자동 대체.
+    let currentSpeakAudio = null;
 	  const LOCAL_VOICE_PACK_READY = false;
 	  const VOICE_CLIPS = {
     "기록할 준비됐어요. 오늘도 시작할까요, 선생님?": "voice/greeting1.mp3",
@@ -376,6 +401,13 @@
   async function speak(text) {
     if (!voiceOn || !text) return;
     
+    if (currentSpeakAudio) {
+      try {
+        currentSpeakAudio.pause();
+        currentSpeakAudio.currentTime = 0;
+      } catch (_) {}
+    }
+    
     // ElevenLabs API 실시간 통신
     if (ELEVENLABS_API_KEY && ELEVENLABS_VOICE_ID) {
       try {
@@ -397,6 +429,7 @@
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
           const a = new Audio(url);
+          currentSpeakAudio = a;
           a.play();
           return;
         } else {
@@ -411,6 +444,7 @@
 	    const clip = VOICE_CLIPS[text];
 	    if (LOCAL_VOICE_PACK_READY && clip) {
 	      const a = new Audio(clip);
+	      currentSpeakAudio = a;
 	      a.play().catch(() => ttsSpeak(text));
 	    } else {
 	      ttsSpeak(text);
@@ -612,17 +646,20 @@
 		  function addSteps(n, source = 'sensor') {
 	        const nowKey = todayKey();
 	        if (state.currentDateKey && state.currentDateKey !== nowKey) {
-          // 자정(Midnight) 지남 -> 초기화 처리
-          state.steps = 0;
-          state.goalReachedToday = false;
+	          // 자정(Midnight) 지남 -> 초기화 처리 및 어제 누적치를 lifetime-base에 안전하게 더해 O(1) 성능 유지
+	          const baseVal = +(localStorage.getItem('noa-manbogi-lifetime-base') || 0);
+	          localStorage.setItem('noa-manbogi-lifetime-base', baseVal + state.steps);
+	          
+	          state.steps = 0;
+	          state.goalReachedToday = false;
 	          state.easterEggShown = false;
 	          state.currentDateKey = nowKey;
 	          state.sources = makeEmptySources();
 	          state.lastSource = '';
 	          shownMile = -1;
-          cachedBaseLifetimeSteps = null; // 누적 걸음수 갱신
-          renderHistory(0);
-        }
+	          cachedBaseLifetimeSteps = null; // 누적 걸음수 갱신
+	          renderHistory(0);
+	        }
 
         const milestoneBefore = shownMile;
 		    const prev2k = Math.floor(state.steps / 2000);
@@ -829,7 +866,8 @@
 	  }
 	  async function initBgmAvailability() {
 	    try {
-	      const response = await fetch(BGM_FILE, { method: 'HEAD', cache: 'no-store' });
+	      // 로컬 파일 프로토콜 및 가상 서버(HEAD 미지원 가능성) 대응을 위해 GET으로 점검
+	      const response = await fetch(BGM_FILE, { method: 'GET', cache: 'no-store' });
 	      bgmAvailable = response.ok;
 	    } catch (err) {
 	      bgmAvailable = false;
@@ -885,9 +923,8 @@
     // 애니메이션을 위해 약간의 지연
     setTimeout(() => toast.classList.add('show'), 10);
     
-    // 모모톡 효과음 재생 시도
-    const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-    audio.play().catch(e => console.log('Audio play failed', e));
+    // 모모톡 효과음 (오프라인 안전한 Web Audio)
+    playBeep(800, 80, 0.25);
 
     setTimeout(() => {
       closeMomotalk();
@@ -1027,12 +1064,12 @@
       const isEquipped = (equipped === item.id) || (item.id === 'theme_default' && !equipped);
       let btnHtml = '';
       if (!isPurchased) {
-        btnHtml = `<button onclick="purchaseItem('${item.id}', ${item.cost})" style="background:#7dd3fc; color:#0f172a; padding:6px 12px; font-size:12px; font-weight:bold; border-radius:8px; border:none; cursor:pointer;">${item.cost} 구매</button>`;
+        btnHtml = `<button data-action="buy" data-id="${item.id}" data-cost="${item.cost}" style="background:#7dd3fc; color:#0f172a; padding:6px 12px; font-size:12px; font-weight:bold; border-radius:8px; border:none; cursor:pointer;">${item.cost} 구매</button>`;
       } else if (item.type === 'theme') {
         if (isEquipped) {
           btnHtml = `<button disabled style="background:rgba(255,255,255,0.1); color:var(--good); padding:6px 12px; font-size:12px; border-radius:8px; border:1px solid var(--good);">적용됨</button>`;
         } else {
-          btnHtml = `<button onclick="equipTheme('${item.id}')" style="background:rgba(255,255,255,0.1); color:#fff; padding:6px 12px; font-size:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.4); cursor:pointer;">적용하기</button>`;
+          btnHtml = `<button data-action="equip" data-id="${item.id}" style="background:rgba(255,255,255,0.1); color:#fff; padding:6px 12px; font-size:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.4); cursor:pointer;">적용하기</button>`;
         }
       } else {
         btnHtml = `<button disabled style="background:rgba(255,255,255,0.1); color:var(--muted); padding:6px 12px; font-size:12px; border-radius:8px; border:none;">보유중</button>`;
@@ -1119,8 +1156,15 @@
   if ($('shop-close')) {
     $('shop-close').onclick = () => $('shop-modal').classList.add('hidden');
   }
-  window.purchaseItem = purchaseItem;
-  window.equipTheme = equipTheme;
+  // 상점 버튼 이벤트 위임 (전역 노출 없이 IIFE 안에서 처리)
+  if ($('shop-list')) {
+    $('shop-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      if (btn.dataset.action === 'buy') purchaseItem(btn.dataset.id, +btn.dataset.cost);
+      else if (btn.dataset.action === 'equip') equipTheme(btn.dataset.id);
+    });
+  }
 
   // --- 업적(Badges) 시스템 ---
   const BADGE_DEFS = [
@@ -1168,6 +1212,10 @@
 
   function saveChatHistory() {
     try {
+      // 대화 기록 무제한 누적으로 인한 localStorage QuotaExceededError 방지
+      if (chatHistory.length > 100) {
+        chatHistory = chatHistory.slice(-100);
+      }
       localStorage.setItem('noa-momotalk-chat', JSON.stringify(chatHistory));
     } catch(e) {}
   }
@@ -1291,13 +1339,22 @@
   async function callGemini() {
     if (!GEMINI_API_KEY) return "선생님, 설정에서 Gemini API Key를 등록하시면 저와 대화를 나눌 수 있답니다.";
     
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     
     const recentHistory = chatHistory.slice(-12);
-    const contents = recentHistory.map(h => ({
-      role: h.sender === 'self' ? 'user' : 'model',
-      parts: [{ text: h.msg }]
-    }));
+    const contents = [];
+    recentHistory.forEach(h => {
+      const role = h.sender === 'self' ? 'user' : 'model';
+      // Gemini 400 Bad Request 에러 방지: 연속된 동일 Role의 말풍선들을 하나로 합침
+      if (contents.length > 0 && contents[contents.length - 1].role === role) {
+        contents[contents.length - 1].parts[0].text += '\n' + (h.msg || '');
+      } else {
+        contents.push({
+          role: role,
+          parts: [{ text: h.msg || '' }]
+        });
+      }
+    });
     
     const requestBody = {
       system_instruction: {
@@ -1480,7 +1537,7 @@
 	    const modal = $(`setup-${key}-state`);
 	    const action = $(`setup-${key}-btn`);
 	    if (compact) compact.textContent = text;
-	    if (modal) modal.textContent = text.replace(/^[^:]+:\\s*/, '');
+	    if (modal) modal.textContent = text.replace(/^[^:]+:\s*/, '');
 	    if (action) action.classList.toggle('done', done);
 	  }
 	  function updateSetupChecklist() {
@@ -1581,6 +1638,7 @@
           backgroundColor: '#12162f',
           logging: false,
           useCORS: true,
+          allowTaint: true,
           border: 0
         });
 	        const link = document.createElement('a');
@@ -1622,10 +1680,8 @@
         // 햅틱 진동 피드백
         if (navigator.vibrate) navigator.vibrate([30, 50]);
         
-        // 결재 도장 효과음 (브라우저 호환 오디오)
-        const audio = new Audio("https://actions.google.com/sounds/v1/submarines/sonar_ping.ogg");
-        audio.volume = 0.5;
-        audio.play().catch(() => {});
+        // 결재 도장 효과음 (오프라인 안전한 Web Audio)
+        playBeep(600, 120, 0.4);
         
         showMomotalk("선생님, 보고서 결재가 완료되었습니다. 수고하셨습니다!");
         

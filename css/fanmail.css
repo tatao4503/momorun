@@ -453,14 +453,49 @@ h1 {
   margin: 0 0 10px;
 }
 
-.notice-panel ul {
+.notice-list {
   margin: 0;
-  padding-left: 18px;
   display: grid;
-  gap: 7px;
-  color: #d4ddf8;
+  gap: 8px;
+}
+
+.notice-item {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.055);
+}
+
+.notice-item b {
+  color: var(--cyan);
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 950;
+}
+
+.notice-item span {
+  color: #dce5ff;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+.notice-footnote {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+.notice-footnote a {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .toast {
@@ -527,5 +562,10 @@ h1 {
   .status-pill {
     font-size: 10px;
     padding-inline: 9px;
+  }
+
+  .notice-item {
+    grid-template-columns: 1fr;
+    gap: 3px;
   }
 }

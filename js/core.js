@@ -3,6 +3,22 @@
 (() => {
   const STORAGE_PREFIX = 'noa-manbogi-';
   const pad = n => String(n).padStart(2, '0');
+  
+  function toLocalISOString(date) {
+    const tzOffset = -date.getTimezoneOffset();
+    const diff = tzOffset >= 0 ? '+' : '-';
+    const pad2 = num => String(Math.floor(Math.abs(num))).padStart(2, '0');
+    return date.getFullYear() +
+      '-' + pad2(date.getMonth() + 1) +
+      '-' + pad2(date.getDate()) +
+      'T' + pad2(date.getHours()) +
+      ':' + pad2(date.getMinutes()) +
+      ':' + pad2(date.getSeconds()) +
+      '.' + String((date.getMilliseconds() / 1000).toFixed(3)).slice(2, 5) +
+      diff + pad2(tzOffset / 60) +
+      ':' + pad2(tzOffset % 60);
+  }
+
   const dateKey = d => `${STORAGE_PREFIX}${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const legacyDateKey = d => `${STORAGE_PREFIX}${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
   const todayKey = () => dateKey(new Date());
@@ -85,12 +101,12 @@
       let hkSteps = 0;
       if (typeof Health.queryAggregated === 'function') {
         const res = await Health.queryAggregated({
-          dataType: 'steps', startDate: today.toISOString(), endDate: tomorrow.toISOString(), bucket: 'day'
+          dataType: 'steps', startDate: toLocalISOString(today), endDate: toLocalISOString(tomorrow), bucket: 'day'
         });
         if (res && res.samples) res.samples.forEach(s => { if (s.value) hkSteps += s.value; });
       } else if (typeof Health.query === 'function') {
         const res = await Health.query({
-          startDate: today.toISOString(), endDate: tomorrow.toISOString(), dataType: 'steps', limit: 1000
+          startDate: toLocalISOString(today), endDate: toLocalISOString(tomorrow), dataType: 'steps', limit: 1000
         });
         if (res && res.entries) res.entries.forEach(e => hkSteps += e.value);
       }

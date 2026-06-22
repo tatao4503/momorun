@@ -1,9 +1,11 @@
-const CACHE_NAME = 'noa-manbogi-v29';
+const CACHE_NAME = 'noa-manbogi-v31';
 const APP_ASSETS = [
   './',
   './index.html',
   './momotalk.html',
   './fanmail.html',
+  './fanmail-privacy.html',
+  './privacy.html',
   './css/style.css',
   './css/fanmail.css',
   './js/core.js',

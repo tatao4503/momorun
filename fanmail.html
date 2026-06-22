@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#12162f" />
 <title>모모런 - 팬레터 데모</title>
-<link rel="stylesheet" href="css/fanmail.css?v=1" />
+<link rel="stylesheet" href="css/fanmail.css?v=31" />
 </head>
 <body>
 <main class="mail-app">
   <header class="mail-header">
-    <a class="back-link" href="index.html?v=28" aria-label="풀버전으로 돌아가기">
+    <a class="back-link" href="index.html" aria-label="풀버전으로 돌아가기">
       <span aria-hidden="true">‹</span>
       풀버전
     </a>
@@ -81,18 +81,33 @@
 
   <section class="notice-panel" aria-label="팬 창작 안내">
     <h2>메일 공유용 안내</h2>
-    <ul>
-      <li>이 페이지는 비공식, 비상업 팬 데모입니다.</li>
-      <li>게임 내 경제나 수익화로 오해될 수 있는 기능은 포함하지 않았습니다.</li>
-      <li>걸음 기록은 이 브라우저 안에만 저장되며 계정 정보나 서버 전송을 사용하지 않습니다.</li>
-      <li>Blue Archive 및 관련 캐릭터 권리는 각 권리자에게 있습니다.</li>
-    </ul>
+    <div class="notice-list">
+      <article class="notice-item">
+        <b>성격</b>
+        <span>비공식, 비상업 개인 팬 데모입니다.</span>
+      </article>
+      <article class="notice-item">
+        <b>제외</b>
+        <span>수익화, 결제, 게임 내 경제로 오해될 기능은 넣지 않았습니다.</span>
+      </article>
+      <article class="notice-item">
+        <b>저장</b>
+        <span>걸음 기록은 이 브라우저 안에만 저장되며 서버로 전송하지 않습니다.</span>
+      </article>
+      <article class="notice-item">
+        <b>권리</b>
+        <span>Blue Archive 및 관련 캐릭터 권리는 각 권리자에게 있습니다.</span>
+      </article>
+    </div>
+    <p class="notice-footnote">
+      자세한 데이터 안내는 <a href="fanmail-privacy.html">팬레터 데모 개인정보 안내</a>에서 확인할 수 있습니다.
+    </p>
   </section>
 </main>
 
 <div id="toast" class="toast hidden"></div>
 
-<script src="js/core.js?v=28"></script>
-<script src="js/fanmail.js?v=1"></script>
+<script src="js/core.js?v=31"></script>
+<script src="js/fanmail.js?v=31"></script>
 </body>
 </html>

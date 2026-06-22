@@ -65,6 +65,25 @@
     }));
   }
 
+  function clearFanmailRecords() {
+    Object.keys(localStorage)
+      .filter(key => key.startsWith(STORAGE_PREFIX))
+      .forEach(key => localStorage.removeItem(key));
+    state.steps = 0;
+    state.goal = GOAL;
+    state.sources = { motion: 0, sample: 0 };
+    state.currentDateKey = todayKey();
+  }
+
+  function applyUrlCommands() {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('reset') !== '1') return false;
+    clearFanmailRecords();
+    url.searchParams.delete('reset');
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    return true;
+  }
+
   function load() {
     state.currentDateKey = todayKey();
     const saved = readRecord(todayKey());
@@ -257,6 +276,20 @@
     showToast('샘플 기록 500보를 추가했습니다.');
   };
 
+  window.NoaFanmailDemo = {
+    reset() {
+      clearFanmailRecords();
+      render();
+      showToast('팬레터 데모를 0보 상태로 정리했습니다.');
+    },
+    addSampleSteps(amount = 500) {
+      addSteps(amount, 'sample');
+      showToast(`샘플 기록 ${formatSteps(amount)}를 추가했습니다.`);
+    },
+  };
+
   window.addEventListener('beforeunload', writeRecord);
+  const resetApplied = applyUrlCommands();
   load();
+  if (resetApplied) showToast('팬레터 데모를 0보 상태로 정리했습니다.');
 })();
