@@ -36,15 +36,22 @@
 
   // LocalStorage I/O Debouncing
   let saveTimer = null;
+  let storageWarned = false;
   function saveNow() {
     clearTimeout(saveTimer);
-    localStorage.setItem(todayKey(), JSON.stringify({
+    const ok = C.safeSet(todayKey(), JSON.stringify({
       steps: state.steps,
       goal: state.goal,
       sources: normalizeSources(state.sources),
       lastSource: state.steps > 0 ? 'sensor' : '',
       updatedAt: new Date().toISOString(),
     }));
+    if (!ok && !storageWarned) {
+      storageWarned = true;
+      showToast('기록 저장 실패 — 사생활 모드인지 확인해 주세요.');
+    } else if (ok) {
+      storageWarned = false;
+    }
   }
   function save() {
     clearTimeout(saveTimer);

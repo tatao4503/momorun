@@ -195,16 +195,25 @@
 
 	  // LocalStorage I/O Debouncing
   let saveTimer = null;
+	  let storageWarned = false;
 	  function saveNow() {
 	    clearTimeout(saveTimer);
-	    localStorage.setItem(todayKey(), JSON.stringify({
+	    const ok1 = C.safeSet(todayKey(), JSON.stringify({
 	      steps: state.steps,
 	      goal: state.goal,
 	      sources: normalizeSources(state.sources),
 	      lastSource: state.lastSource,
 	      updatedAt: new Date().toISOString(),
 	    }));
-	    localStorage.setItem('noa-manbogi-goal', state.goal);
+	    const ok2 = C.safeSet('noa-manbogi-goal', state.goal);
+	    if (!ok1 || !ok2) {
+	      if (!storageWarned) {
+	        storageWarned = true;
+	        $('msg').textContent = '기록을 저장할 수 없어요. 사생활 모드인지, 저장 공간이 충분한지 확인해 주세요.';
+	      }
+	      return;
+	    }
+	    storageWarned = false;
 	    checkPyroxenes();
 	  }
   function save() {

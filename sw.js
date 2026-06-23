@@ -1,4 +1,4 @@
-const CACHE_NAME = 'noa-manbogi-v31';
+const CACHE_NAME = 'noa-manbogi-v32';
 const APP_ASSETS = [
   './',
   './index.html',

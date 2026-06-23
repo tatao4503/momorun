@@ -24,6 +24,18 @@
   const todayKey = () => dateKey(new Date());
   const fallbackGoal = () => Math.max(100, +(localStorage.getItem('noa-manbogi-goal') || 10000) || 10000);
 
+  // 안전 저장: 사파리 사생활 모드/용량 초과 등으로 setItem이 throw해도 앱이 죽지 않게.
+  // 성공 true / 실패 false 반환.
+  function safeSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (err) {
+      console.warn('localStorage 저장 실패:', key, err && err.name);
+      return false;
+    }
+  }
+
   function parseRecord(key) {
     try {
       const raw = localStorage.getItem(key);
@@ -147,7 +159,7 @@
   window.NoaCore = {
     STORAGE_PREFIX,
     CIRC: 2 * Math.PI * 106, // ≈ 666
-    pad, dateKey, legacyDateKey, todayKey, fallbackGoal, parseRecord,
+    pad, dateKey, legacyDateKey, todayKey, fallbackGoal, parseRecord, safeSet,
     createStepDetector, syncHealthKit, initBackgroundTasks, setupAppLifecycle,
   };
 })();
