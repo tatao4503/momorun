@@ -1,4 +1,6 @@
-const CACHE_NAME = 'noa-manbogi-v32';
+// 🔖 버전 관리는 여기 한 곳만 — 코드/자산 바꾼 뒤 이 숫자만 올리면 캐시 갱신됨.
+// (HTML의 ?v= 쿼리는 제거함: 코드 자산은 SW network-first로 항상 최신 반영)
+const CACHE_NAME = 'noa-manbogi-v33';
 const APP_ASSETS = [
   './',
   './index.html',
