@@ -933,3 +933,46 @@
     font-style: italic;
     opacity: 0.7;
   }
+
+  /* --- Memorial Lobby & Hide UI System --- */
+  @keyframes memorial-zoom {
+    0% { transform: scale(1) translate(0, 0); }
+    50% { transform: scale(1.05) translate(-1%, 0.5%); }
+    100% { transform: scale(1) translate(0, 0); }
+  }
+
+  body.memorial-mode::before {
+    animation: memorial-zoom 30s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body.memorial-mode::before {
+      animation: none !important;
+    }
+  }
+
+  /* Smooth UI hide/show transitions */
+  .app > * {
+    transition: opacity 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  body.hide-ui .app > :not(#hide-ui-overlay) {
+    opacity: 0 !important;
+    transform: scale(0.98);
+    pointer-events: none !important;
+  }
+
+  /* Overlay to click-to-dismiss UI Hide mode */
+  #hide-ui-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999998;
+    background: transparent;
+    cursor: pointer;
+    display: none;
+  }
+
+  body.hide-ui #hide-ui-overlay {
+    display: block;
+  }
+

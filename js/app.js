@@ -329,6 +329,13 @@
       "여기까지 기록해 뒀어요. 언제든 이어서 하시면 돼요.",
       "잠깐 쉬어가도 괜찮아요. 기록은 그대로 남아 있어요.",
     ],
+    memorial: [
+      "선생님, 그렇게 빤히 바라보시면 기록하는 손이 멈춰버린답니다.",
+      "서기인 저도 모르게, 선생님의 얼굴을 넋 놓고 바라볼 뻔했어요. 이건 비밀 기록이랍니다?",
+      "오늘 하루도 고생 많으셨어요. 지금만큼은 일도, 기록도 다 잊고 제 곁에서 쉬어가시는 건 어떨까요?",
+      "선생님과 함께 걷는 이 길을 매 걸음마다 제 마음속 깊이 적어두고 있어요.",
+      "선생님의 손길... 참 따뜻하네요. 앞으로도 계속 곁에서 적어두게 해주세요."
+    ]
   };
   const milestones = [
     { p: 0.25, t: "좋은 출발이에요, 선생님. 순조롭게 적히고 있어요." },
@@ -380,7 +387,7 @@
 	  // 진짜 노아 보이스 클립을 쓰려면 voice/ 폴더에 mp3를 넣고 아래 맵에 "대사": "voice/파일.mp3" 추가.
 	  // 매핑이 없으면 브라우저 음성합성(TTS)으로 자동 대체.
     let currentSpeakAudio = null;
-	  const LOCAL_VOICE_PACK_READY = false;
+    let LOCAL_VOICE_PACK_READY = false;
 	  const VOICE_CLIPS = {
     "기록할 준비됐어요. 오늘도 시작할까요, 선생님?": "voice/greeting1.mp3",
     "선생님의 걸음, 한 걸음도 빠짐없이 기억해 둘게요.": "voice/greeting2.mp3",
@@ -404,8 +411,29 @@
     if (!('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ko-KR'; u.rate = 1.0; u.pitch = 1.15;
+    u.lang = 'ko-KR'; 
+    u.rate = 1.05; // 살짝 빠르게 속도 튜닝
+    u.pitch = 1.12; // 톤 보정을 위해 피치 튜닝
+    
+    // 기기 내장 프리미엄 한국어 음성 필터링 (Apple Yuna / Siri 등)
+    if (typeof speechSynthesis.getVoices === 'function') {
+      const voices = speechSynthesis.getVoices();
+      const koVoice = voices.find(v => v.lang.includes('ko-KR') && (v.name.includes('Yuna') || v.name.includes('Siri') || v.name.includes('Premium')))
+                      || voices.find(v => v.lang.includes('ko-KR'));
+      if (koVoice) u.voice = koVoice;
+    }
     speechSynthesis.speak(u);
+  }
+
+  async function checkLocalVoicePack() {
+    try {
+      // 대표 오디오 클립 greeting1.mp3의 실제 존재(서빙) 여부를 동적으로 탐색
+      const response = await fetch('voice/greeting1.mp3', { method: 'GET', cache: 'no-store' });
+      LOCAL_VOICE_PACK_READY = response.ok;
+    } catch (_) {
+      LOCAL_VOICE_PACK_READY = false;
+    }
+    updateVoiceBtn();
   }
   async function speak(text) {
     if (!voiceOn || !text) return;
@@ -602,6 +630,15 @@
     const lifetime = getLifetimeSteps();
     const affection = getAffectionLevel(lifetime);
     $('rankBadge').textContent = `Lv. ${affection.level} ${affection.title}`;
+
+    // 호감도 레벨 2 이상(1만보 달성) 시 메모리얼 로비(Ken Burns) 자동 가동
+    if (affection.level >= 2) {
+      document.body.classList.add('memorial-mode');
+    } else {
+      if (!document.body.classList.contains('hide-ui')) {
+        document.body.classList.remove('memorial-mode');
+      }
+    }
 
     // 레벨업(친밀도) 연출
     if (affection.level > lastAffectionLevel) {
@@ -963,6 +1000,28 @@
         chatInput.disabled = true;
       }
     }
+  }
+
+  // --- UI 숨기기 및 메모리얼 터치 인터랙션 ---
+  if ($('hide-ui-btn')) {
+    $('hide-ui-btn').onclick = () => {
+      document.body.classList.add('hide-ui');
+      document.body.classList.add('memorial-mode');
+      if (navigator.vibrate) navigator.vibrate([15]);
+      say(pickLine(noaLines.memorial));
+    };
+  }
+
+  if ($('hide-ui-overlay')) {
+    $('hide-ui-overlay').onclick = () => {
+      document.body.classList.remove('hide-ui');
+      const lifetime = getLifetimeSteps();
+      const affection = getAffectionLevel(lifetime);
+      if (affection.level < 2) {
+        document.body.classList.remove('memorial-mode');
+      }
+      if (navigator.vibrate) navigator.vibrate([15]);
+    };
   }
 
   $('settings-btn').onclick = () => {
@@ -1623,7 +1682,7 @@
 	      }
 	      showMomotalk("결재 서류를 작성 중입니다... 잠시만 기다려주세요!");
 	      const panel = document.querySelector('.panel');
-	      const controls = document.querySelectorAll('.controls, #momotalk-btn, #achievements-btn, #settings-btn, #pyroxene-btn');
+	      const controls = document.querySelectorAll('.controls, #momotalk-btn, #achievements-btn, #settings-btn, #pyroxene-btn, #hide-ui-btn');
 	      const oldBackground = panel ? panel.style.background : '';
 
 	      try {
@@ -1715,6 +1774,7 @@
 	  render();
 	  updateVoiceBtn();
 	  initBgmAvailability();
+	  checkLocalVoicePack();
 	  updateSetupChecklist();
 	  $('msg').textContent = state.steps > 0
 	    ? `오늘 ${state.steps.toLocaleString()}보까지 기록해 뒀어요.`
