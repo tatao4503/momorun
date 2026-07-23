@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#12162f" />
 <title>모모런 - 팬레터 데모 개인정보 안내</title>
 <style>
@@ -58,12 +58,17 @@
     color: inherit;
   }
 
+  a:focus-visible {
+    outline: 3px solid var(--cyan);
+    outline-offset: 3px;
+  }
+
   .back-link {
     width: max-content;
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    min-height: 32px;
+    min-height: 44px;
     padding: 7px 12px;
     border-radius: 999px;
     border: 1px solid rgba(125, 211, 252, 0.26);
@@ -157,7 +162,7 @@
       </article>
       <article class="item">
         <b>로컬 저장</b>
-        <span>걸음 수와 최근 7일 기록은 현재 브라우저의 localStorage에만 저장됩니다.</span>
+        <span>걸음 수와 최근 7일 기록은 현재 브라우저의 로컬 저장소에만 저장됩니다. 저장소가 차단된 경우 현재 페이지에서만 임시로 유지됩니다.</span>
       </article>
       <article class="item">
         <b>센서 권한</b>

@@ -1,20 +1,26 @@
 // 🔖 버전 관리는 여기 한 곳만 — 코드/자산 바꾼 뒤 이 숫자만 올리면 캐시 갱신됨.
 // (HTML의 ?v= 쿼리는 제거함: 코드 자산은 SW network-first로 항상 최신 반영)
-const CACHE_NAME = 'noa-manbogi-v34';
+const CACHE_NAME = 'noa-manbogi-v45';
 const APP_ASSETS = [
   './',
   './index.html',
+  './modes.html',
   './momotalk.html',
+  './life.html',
   './fanmail.html',
   './fanmail-privacy.html',
   './privacy.html',
   './css/style.css',
+  './css/modes.css',
   './css/fanmail.css',
   './js/core.js',
+  './js/mode-router.js',
   './js/app.js',
   './js/fanmail.js',
   './css/lite.css',
+  './css/life.css',
   './js/lite.js',
+  './js/life.js',
   './manifest.webmanifest',
   './noa-mobile.jpg',
   './noa-desktop.jpg',
@@ -61,17 +67,26 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(event.request.url);
   const sameOrigin = url.origin === self.location.origin;
+  if (!sameOrigin) return;
+
   const networkFirst = event.request.mode === 'navigate' || (sameOrigin && isCodeAsset(url));
 
   if (networkFirst) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          }
           return response;
         })
-        .catch(() => caches.match(event.request).then(c => c || caches.match('./index.html')))
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          if (event.request.mode === 'navigate') return caches.match('./index.html');
+          return Response.error();
+        })
     );
     return;
   }
@@ -81,8 +96,10 @@ self.addEventListener('fetch', event => {
     caches.match(event.request).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
         return response;
       });
     })

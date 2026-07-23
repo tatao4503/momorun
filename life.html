@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko" data-mode="life">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#182334" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="모모런 Life" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>모모런 - 일상 버전</title>
+<script src="js/mode-router.js"></script>
+<link rel="stylesheet" href="css/life.css" />
+</head>
+<body>
+<div class="life-shell">
+  <header class="life-hero">
+    <div class="life-topbar">
+      <div class="life-brand">
+        <div class="noa-halo" aria-hidden="true">
+          <span class="halo-outer"></span>
+          <span class="halo-inner"></span>
+          <span class="halo-chip left"></span>
+          <span class="halo-chip right"></span>
+        </div>
+        <div>
+          <h1>일상 버전</h1>
+          <small>NOA WALKING LOG · LIFE</small>
+        </div>
+      </div>
+      <div class="life-top-actions">
+        <a href="modes.html" class="icon-button mode-button" aria-label="모모런 버전 선택">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+          <span>버전</span>
+        </a>
+        <button id="quickSync" class="icon-button" type="button" aria-label="건강 앱 걸음 동기화" title="건강 앱 걸음 동기화">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6v5h-5"></path><path d="M4 18v-5h5"></path><path d="M6.1 9A7 7 0 0 1 18 6l2 2"></path><path d="M17.9 15A7 7 0 0 1 6 18l-2-2"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="hero-copy">
+      <p id="todayDate">오늘</p>
+      <strong id="heroGreeting">오늘 기록을 정리해 둘게요.</strong>
+    </div>
+  </header>
+
+  <main class="life-main">
+    <section id="todayPanel" class="tab-panel active" data-panel="today" role="tabpanel" aria-labelledby="tabToday">
+      <div class="record-header">
+        <div>
+          <span>DAILY RECORD</span>
+          <strong>오늘의 기록</strong>
+        </div>
+        <b id="recordStatus">기록 준비</b>
+      </div>
+      <div class="progress-section">
+        <div class="ring-wrap">
+          <svg class="progress-ring" viewBox="0 0 240 240" aria-hidden="true">
+            <circle cx="120" cy="120" r="106" fill="none" stroke="#e5eaee" stroke-width="14"></circle>
+            <circle id="lifeProgress" cx="120" cy="120" r="106" fill="none" stroke="#4da7c8" stroke-width="14" stroke-linecap="round" stroke-dasharray="666" stroke-dashoffset="666"></circle>
+          </svg>
+          <div class="ring-center">
+            <strong id="lifeSteps">0</strong>
+            <span>걸음</span>
+          </div>
+        </div>
+        <div class="goal-line">
+          <strong id="goalPercent">0%</strong>
+          <span id="goalRemain">목표 10,000보</span>
+        </div>
+      </div>
+
+      <div class="memo-strip">
+        <img src="icon-192.png" alt="우시오 노아" />
+        <div class="memo-content">
+          <span>우시오 노아 · MOMOTALK</span>
+          <p id="lifeMemo">건강 앱을 연결하면 오늘 걸음을 자동으로 정리합니다.</p>
+        </div>
+        <button id="speakMemo" class="memo-speak" type="button" aria-label="메모를 TTS로 듣기" title="메모를 TTS로 듣기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M19 5a10 10 0 0 1 0 14"></path></svg>
+        </button>
+      </div>
+
+      <div class="today-metrics" aria-label="오늘 기록 요약">
+        <div>
+          <span>남은 걸음</span>
+          <strong id="remainingSteps">10,000보</strong>
+        </div>
+        <div>
+          <span>최근 동기화</span>
+          <strong id="lastSync">아직 없음</strong>
+        </div>
+      </div>
+
+      <button id="syncHealth" class="primary-action" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1.1-1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.8-7.6a5.5 5.5 0 0 0 1-8.8z"></path></svg>
+        <span id="syncHealthLabel">건강 앱 연결</span>
+      </button>
+      <p id="healthStatus" class="action-status" role="status" aria-live="polite">HealthKit은 선택한 경우에만 걸음 수를 읽습니다.</p>
+    </section>
+
+    <section id="recordsPanel" class="tab-panel" data-panel="records" role="tabpanel" aria-labelledby="tabRecords" hidden>
+      <div class="section-heading">
+        <div>
+          <span>RECENT LOG</span>
+          <h2>최근 7일</h2>
+        </div>
+        <strong id="weekTotal">0보</strong>
+      </div>
+      <div class="week-summary" aria-label="최근 7일 요약">
+        <div><span>하루 평균</span><strong id="weekAverage">0보</strong></div>
+        <div><span>목표 달성</span><strong id="weekGoals">0일</strong></div>
+      </div>
+      <div id="weekRecords" class="week-records"></div>
+    </section>
+
+    <section id="settingsPanel" class="tab-panel" data-panel="settings" role="tabpanel" aria-labelledby="tabSettings" hidden>
+      <div class="section-heading settings-heading">
+        <div>
+          <span>LIFE SETTING</span>
+          <h2>설정</h2>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label class="goal-setting" for="goalInput">
+          <span><b>하루 목표</b><small>100보 단위로 저장됩니다.</small></span>
+          <span class="goal-input-wrap"><input id="goalInput" type="number" min="100" max="100000" step="100" inputmode="numeric" /><em>보</em></span>
+        </label>
+        <button id="saveGoal" class="secondary-action" type="button">목표 저장</button>
+      </div>
+
+      <div class="setting-group setting-list">
+        <div class="setting-row">
+          <span><b>걷기 알림</b><small>매일 오전 8시와 오후 8시</small></span>
+          <button id="notificationToggle" class="switch" type="button" role="switch" aria-checked="false" aria-label="걷기 알림 켜기"><span></span></button>
+        </div>
+        <div class="setting-row">
+          <span><b>TTS 안내 음성</b><small>기기 내장 음성합성, 기본 OFF</small></span>
+          <button id="ttsToggle" class="switch" type="button" role="switch" aria-checked="false" aria-label="TTS 안내 음성 켜기"><span></span></button>
+        </div>
+        <p class="setting-note">TTS는 공식 캐릭터 음성이나 게임 음원이 아닙니다.</p>
+        <div class="setting-row">
+          <span><b>동작 센서 보조 측정</b><small>HealthKit을 쓰지 않을 때 화면을 켜고 측정</small></span>
+          <button id="motionToggle" class="switch" type="button" role="switch" aria-checked="false" aria-label="동작 센서 보조 측정 켜기"><span></span></button>
+        </div>
+      </div>
+
+      <div class="setting-group about-block">
+        <div><b>모모런 일상 버전</b><span>Life · iPhone</span></div>
+        <p>기록은 이 기기에 저장되며 HealthKit 걸음 수는 선택한 경우에만 읽습니다.</p>
+        <div class="text-links">
+          <a href="privacy.html">개인정보 안내</a>
+          <a href="modes.html">세 버전 선택</a>
+        </div>
+        <small>비공식·비상업 팬 제작물이며 관련 권리는 각 권리자에게 있습니다.</small>
+      </div>
+    </section>
+  </main>
+
+  <nav class="life-nav" role="tablist" aria-label="주요 화면">
+    <button id="tabToday" class="nav-item active" type="button" role="tab" data-tab="today" aria-controls="todayPanel" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12l9-9 9 9"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg>
+      <span>오늘</span>
+    </button>
+    <button id="tabRecords" class="nav-item" type="button" role="tab" data-tab="records" aria-controls="recordsPanel" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9"></path><path d="M10 19V5"></path><path d="M16 19v-7"></path><path d="M22 19H2"></path></svg>
+      <span>기록</span>
+    </button>
+    <button id="tabSettings" class="nav-item" type="button" role="tab" data-tab="settings" aria-controls="settingsPanel" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1h.1a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"></path></svg>
+      <span>설정</span>
+    </button>
+  </nav>
+</div>
+
+<div id="lifeToast" class="life-toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/core.js"></script>
+<script src="js/life.js"></script>
+</body>
+</html>

@@ -1,9 +1,11 @@
 (() => {
   const $ = id => document.getElementById(id);
+  const C = window.NoaCore;
+  const storage = C.storage;
 
   function installDevErrorOverlay() {
     const params = new URLSearchParams(window.location.search);
-    const enabled = params.has('debug') || localStorage.getItem('noa-dev-error-overlay') === '1';
+    const enabled = params.has('debug') || storage.getItem('noa-dev-error-overlay') === '1';
     if (!enabled) return;
 
     function showDebugOverlay(title, details, level = 'error') {
@@ -50,58 +52,133 @@
 
   installDevErrorOverlay();
 
-  const C = window.NoaCore;
   const CIRC = C.CIRC;
 
-	  const state = {
-	    steps: 0,
-	    goal: 10000,
-	    running: false,
-	    lastStepTime: 0,
-		    goalReachedToday: false,
-		    easterEggShown: false,
-		    currentDateKey: null,
-		    sources: { sensor: 0, health: 0, test: 0, dev: 0 },
-		    lastSource: ''
-		  };
-		
-		  // ---- daily persistence ----
-	  // 공통 저장/날짜 헬퍼는 core.js(NoaCore)에서 가져온다.
-	  const { STORAGE_PREFIX, pad, dateKey, legacyDateKey, todayKey, fallbackGoal, parseRecord } = C;
-	  const SOURCE_LABELS = {
-	    sensor: '동작 센서',
-	    health: 'HealthKit',
-	    test: '테스트 입력',
-	    dev: '개발자 입력',
-	  };
-	  const makeEmptySources = () => ({ sensor: 0, health: 0, test: 0, dev: 0 });
-	  function normalizeSources(sources) {
-	    return {
-	      sensor: Math.max(0, +(sources && sources.sensor) || 0),
-	      health: Math.max(0, +(sources && sources.health) || 0),
-	      test: Math.max(0, +(sources && sources.test) || 0),
-	      dev: Math.max(0, +(sources && sources.dev) || 0),
-	    };
-	  }
-	  function sourceSummary(sources, totalSteps = 0) {
-	    const s = normalizeSources(sources);
-	    const parts = Object.keys(SOURCE_LABELS)
-	      .filter(key => s[key] > 0)
-	      .map(key => `${SOURCE_LABELS[key]} ${s[key].toLocaleString()}보`);
-	    if (!parts.length && totalSteps > 0) return '출처: 이전 버전 기록';
-	    return parts.length ? `출처: ${parts.join(' · ')}` : '출처: 기록 대기';
-	  }
-	  function markSource(source, amount) {
-	    const safeSource = SOURCE_LABELS[source] ? source : 'sensor';
-	    const safeAmount = Math.max(0, Math.round(+amount || 0));
-	    if (safeAmount <= 0) return;
-	    state.sources = normalizeSources(state.sources);
-	    state.sources[safeSource] += safeAmount;
-	    state.lastSource = safeSource;
-	  }
-	  function recordFor(date) {
-	    return parseRecord(dateKey(date)) || parseRecord(legacyDateKey(date)) || { steps: 0, goal: fallbackGoal() };
-	  }
+  const state = {
+    steps: 0,
+    goal: 10000,
+    running: false,
+    lastStepTime: 0,
+    goalReachedToday: false,
+    easterEggShown: false,
+    currentDateKey: null,
+    sources: { sensor: 0, health: 0, test: 0, dev: 0 },
+    lastSource: ''
+  };
+
+  const modalFocusOrigins = new Map();
+  const focusableSelector = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ].join(',');
+
+  function getOpenModal() {
+    const openModals = Array.from(document.querySelectorAll('.modal:not(.hidden)'));
+    return openModals[openModals.length - 1] || null;
+  }
+
+  function openModal(id, trigger = document.activeElement) {
+    const modal = $(id);
+    if (!modal) return;
+    if (trigger instanceof HTMLElement && trigger !== document.body && trigger !== document.documentElement) {
+      modalFocusOrigins.set(id, trigger);
+    }
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => {
+      const first = modal.querySelector('[autofocus], .modal-close, ' + focusableSelector);
+      if (first instanceof HTMLElement) first.focus();
+    });
+  }
+
+  function closeModal(id, restoreFocus = true) {
+    const modal = $(id);
+    if (!modal || modal.classList.contains('hidden')) return;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    const origin = modalFocusOrigins.get(id);
+    modalFocusOrigins.delete(id);
+    if (restoreFocus && origin instanceof HTMLElement && origin.isConnected) origin.focus();
+  }
+
+  document.addEventListener('keydown', event => {
+    const modal = getOpenModal();
+    if (!modal) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeModal(modal.id);
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = Array.from(modal.querySelectorAll(focusableSelector))
+      .filter(element => element instanceof HTMLElement && element.getClientRects().length > 0);
+    if (!focusable.length) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  document.addEventListener('click', event => {
+    if (event.target instanceof HTMLElement && event.target.classList.contains('modal')) {
+      closeModal(event.target.id);
+    }
+  });
+
+  // ---- daily persistence ----
+  // 공통 저장/날짜 헬퍼는 core.js(NoaCore)에서 가져온다.
+  const { STORAGE_PREFIX, pad, dateKey, legacyDateKey, todayKey, fallbackGoal, parseRecord } = C;
+  const SOURCE_LABELS = {
+    sensor: '동작 센서',
+    health: 'HealthKit',
+    test: '테스트 입력',
+    dev: '개발자 입력',
+  };
+  const makeEmptySources = () => ({ sensor: 0, health: 0, test: 0, dev: 0 });
+  function normalizeSources(sources) {
+    return {
+      sensor: Math.max(0, +(sources && sources.sensor) || 0),
+      health: Math.max(0, +(sources && sources.health) || 0),
+      test: Math.max(0, +(sources && sources.test) || 0),
+      dev: Math.max(0, +(sources && sources.dev) || 0),
+    };
+  }
+  function sourceSummary(sources, totalSteps = 0) {
+    const s = normalizeSources(sources);
+    const parts = Object.keys(SOURCE_LABELS)
+      .filter(key => s[key] > 0)
+      .map(key => `${SOURCE_LABELS[key]} ${s[key].toLocaleString()}보`);
+    if (!parts.length && totalSteps > 0) return '출처: 이전 버전 기록';
+    return parts.length ? `출처: ${parts.join(' · ')}` : '출처: 기록 대기';
+  }
+  function markSource(source, amount) {
+    const safeSource = SOURCE_LABELS[source] ? source : 'sensor';
+    const safeAmount = Math.max(0, Math.round(+amount || 0));
+    if (safeAmount <= 0) return;
+    state.sources = normalizeSources(state.sources);
+    state.sources[safeSource] += safeAmount;
+    state.lastSource = safeSource;
+  }
+  function recordFor(date) {
+    return parseRecord(dateKey(date)) || parseRecord(legacyDateKey(date)) || {
+      steps: 0,
+      goal: fallbackGoal(),
+      sources: makeEmptySources(),
+      lastSource: ''
+    };
+  }
   function isSameDay(a, b) {
     return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
   }
@@ -110,29 +187,35 @@
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today);
       d.setDate(today.getDate() - (6 - i));
-      const rec = isSameDay(d, today) ? { steps: state.steps, goal: state.goal } : recordFor(d);
+      const rec = isSameDay(d, today) ? {
+        steps: state.steps,
+        goal: state.goal,
+        sources: normalizeSources(state.sources),
+        lastSource: state.lastSource || ''
+      } : recordFor(d);
       return { date: d, ...rec };
     });
   }
 
-  // 효율화: 매 걸음마다 localStorage 전체를 뒤지지 않도록 누적 걸음수를 캐싱
+  // 효율화: 매 걸음마다 storage 전체를 뒤지지 않도록 누적 걸음수를 캐싱
   let cachedBaseLifetimeSteps = null;
 
   function getLifetimeSteps() {
     if (cachedBaseLifetimeSteps === null) {
-      let base = localStorage.getItem('noa-manbogi-lifetime-base');
+      let base = storage.getItem('noa-manbogi-lifetime-base');
       if (base === null) {
         // 첫 1회 마이그레이션 (O(N) 계산 후 단일 키 보관)
         let calculatedBase = 0;
         const todayStr = dateKey(new Date());
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
+        for (let i = 0; i < storage.length; i++) {
+          const k = storage.key(i);
+          if (!k) continue;
           if (k.startsWith(STORAGE_PREFIX) && k !== todayStr && k !== 'noa-manbogi-goal' && k !== 'noa-manbogi-voice') {
             const rec = parseRecord(k);
             if (rec) calculatedBase += rec.steps;
           }
         }
-        localStorage.setItem('noa-manbogi-lifetime-base', calculatedBase);
+        storage.setItem('noa-manbogi-lifetime-base', calculatedBase);
         base = calculatedBase;
       } else {
         base = +base || 0;
@@ -220,7 +303,10 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveNow, 2000);
   }
-  window.addEventListener('beforeunload', saveNow);
+  window.addEventListener('pagehide', saveNow);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveNow();
+  });
 
   // 우측 통계(보스 HP·연속일·주간합계·랭크·차트)는 비싸므로 throttle해서 갱신
   let historyTimer = null;
@@ -240,7 +326,7 @@
 	    $('goal').value = state.goal;
 	    // 첫 로드 시점엔 현재 레벨로 동기화(잘못된 레벨업 연출 방지)
 	    lastAffectionLevel = getAffectionLevel(getLifetimeSteps()).level;
-	    localStorage.setItem('noa-affection-level', lastAffectionLevel);
+	    storage.setItem('noa-affection-level', lastAffectionLevel);
 		  }
 
 	  // --- 실시간 날씨 연동 (Open-Meteo) ---
@@ -347,11 +433,11 @@
 	  function pickLine(arr) {
 	    if (!Array.isArray(arr) || arr.length === 0) return '';
 	    let recent = [];
-	    try { recent = JSON.parse(localStorage.getItem('noa-recent-lines')) || []; } catch (e) {}
+	    try { recent = JSON.parse(storage.getItem('noa-recent-lines')) || []; } catch (e) {}
 	    const candidates = arr.filter(line => !recent.includes(line));
 	    const line = pick(candidates.length ? candidates : arr);
 	    recent = [line, ...recent.filter(item => item !== line)].slice(0, 8);
-	    localStorage.setItem('noa-recent-lines', JSON.stringify(recent));
+	    storage.setItem('noa-recent-lines', JSON.stringify(recent));
 	    return line;
 	  }
   const milestoneIndexFor = ratio => {
@@ -360,7 +446,7 @@
     return idx;
   };
   let shownMile = -1;
-  let lastAffectionLevel = +(localStorage.getItem('noa-affection-level') || 1);
+  let lastAffectionLevel = +(storage.getItem('noa-affection-level') || 1);
 
   function celebrate(colors) {
     if (typeof confetti !== 'function') return;
@@ -384,7 +470,7 @@
   }
 
 	  // --- 음성 ---
-	  // 진짜 노아 보이스 클립을 쓰려면 voice/ 폴더에 mp3를 넣고 아래 맵에 "대사": "voice/파일.mp3" 추가.
+	  // 사용자가 준비한 로컬 음성 클립을 쓰려면 voice/ 폴더에 mp3를 넣고 아래 맵에 "대사": "voice/파일.mp3" 추가.
 	  // 매핑이 없으면 브라우저 음성합성(TTS)으로 자동 대체.
     let currentSpeakAudio = null;
     let LOCAL_VOICE_PACK_READY = false;
@@ -403,10 +489,10 @@
     "수고하셨습니다, 선생님.": "voice/goal.mp3",
     "음성을 켰어요, 선생님.": "voice/voice_on.mp3"
   };
-	  let voiceOn = localStorage.getItem('noa-manbogi-voice') === '1' || localStorage.getItem('momorun-voice') === '1';
-  let GEMINI_API_KEY = localStorage.getItem('noa-gemini-key') || '';
-  let ELEVENLABS_API_KEY = localStorage.getItem('noa-elevenlabs-key') || '';
-  let ELEVENLABS_VOICE_ID = localStorage.getItem('noa-elevenlabs-voice') || '';
+	  let voiceOn = storage.getItem('noa-manbogi-voice') === '1' || storage.getItem('momorun-voice') === '1';
+  let GEMINI_API_KEY = storage.getItem('noa-gemini-key') || '';
+  let ELEVENLABS_API_KEY = storage.getItem('noa-elevenlabs-key') || '';
+  let ELEVENLABS_VOICE_ID = storage.getItem('noa-elevenlabs-voice') || '';
   function ttsSpeak(text) {
     if (!('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
@@ -489,11 +575,11 @@
   }
   function updateVoiceBtn() {
 	    const b = $('voice');
-	    b.textContent = voiceOn ? '노아 음성: ON' : '노아 음성: OFF';
+	    b.textContent = voiceOn ? 'TTS 안내 음성: ON' : 'TTS 안내 음성: OFF';
 	    b.classList.toggle('on', voiceOn);
 	    b.title = LOCAL_VOICE_PACK_READY
-	      ? '로컬 보이스팩을 우선 재생합니다.'
-	      : '로컬 보이스팩이 없어 ElevenLabs 또는 브라우저 TTS로 재생합니다.';
+	      ? '사용자 준비 로컬 음성을 우선 재생하며, 공식 캐릭터 음성이 아닙니다.'
+	      : '기기 내장 TTS 또는 사용자가 연결한 ElevenLabs TTS로 재생합니다.';
 	  }
 
 	  function say(text) {
@@ -517,25 +603,131 @@
 	    const weekTotal = records.reduce((sum, r) => sum + r.steps, 0);
 	    const goalDays = records.filter(r => r.steps >= r.goal).length;
 	    const best = records.reduce((max, r) => r.steps > max.steps ? r : max, records[0] || { steps: 0, date: new Date(), goal: state.goal });
+	    const activeDays = records.filter(r => r.steps > 0).length;
+	    const weekGoal = records.reduce((sum, r) => sum + Math.max(100, +r.goal || state.goal), 0);
+	    const average = Math.round(weekTotal / Math.max(records.length, 1));
+	    const activeAverage = activeDays > 0 ? Math.round(weekTotal / activeDays) : 0;
+	    const pacePct = weekGoal > 0 ? Math.min(Math.round((weekTotal / weekGoal) * 100), 999) : 0;
+	    const remainingToWeekGoal = Math.max(weekGoal - weekTotal, 0);
 	    let streak = 0;
 	    for (let i = records.length - 1; i >= 0; i--) {
 	      if (records[i].steps <= 0) break;
 	      streak++;
 	    }
-	    return { weekTotal, goalDays, best, streak };
+	    let goalStreak = 0;
+	    for (let i = records.length - 1; i >= 0; i--) {
+	      if (records[i].steps < records[i].goal) break;
+	      goalStreak++;
+	    }
+	    return { weekTotal, goalDays, best, streak, goalStreak, activeDays, average, activeAverage, weekGoal, pacePct, remainingToWeekGoal };
 	  }
 	  function nextWeeklyTarget(metrics) {
-	    if (metrics.goalDays >= 5) return '다음 주는 목표 달성 6일을 노려도 좋겠습니다.';
-	    if (metrics.weekTotal >= state.goal * 4) return '다음 주는 하루 더 목표 달성일을 늘려봅시다.';
+	    if (metrics.goalDays >= 6) return '다음 주는 7일 완주 기록을 노려도 좋겠습니다.';
+	    if (metrics.goalDays >= 3) return '다음 목표는 목표 달성 5일입니다.';
+	    if (metrics.activeDays >= 5) return '기록 빈도는 충분합니다. 하루 목표 달성일을 하나 늘려봅시다.';
+	    if (metrics.weekTotal >= state.goal * 3) return '이번 주 페이스가 안정적입니다. 남은 날은 짧은 산책을 유지해도 좋겠습니다.';
 	    if (state.steps > 0) return '내일은 오늘 기록을 기준으로 1,000보만 더해볼까요?';
 	    return '첫 기록은 10분 산책부터 시작해도 충분합니다.';
 	  }
+	  function weeklyFocus(metrics, ratio, remain) {
+	    if (ratio >= 1) return '휴식 유지';
+	    if (metrics.goalDays >= 5) return '완주 굳히기';
+	    if (metrics.streak >= 3) return '연속 기록';
+	    if (state.steps > 0 && remain <= 1500) return '마감 산책';
+	    if (state.steps > 0) return '천천히 추가';
+	    return '첫 기록';
+	  }
+	  function formatSteps(n) {
+	    return `${Math.max(0, Math.round(+n || 0)).toLocaleString()}보`;
+	  }
+	  function hashText(text) {
+	    let hash = 0;
+	    for (let i = 0; i < text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+	    return Math.abs(hash);
+	  }
+	  let memoCacheKey = '';
+	  let memoCacheText = '';
+	  function stableMemoLine(lines, key) {
+	    if (!Array.isArray(lines) || lines.length === 0) return '';
+	    if (memoCacheKey === key && memoCacheText) return memoCacheText;
+	    memoCacheKey = key;
+	    memoCacheText = lines[hashText(key) % lines.length];
+	    return memoCacheText;
+	  }
 	  function buildNoaMemo(metrics, ratio) {
 	    const sourceText = sourceSummary(state.sources, state.steps).replace('출처: ', '');
-	    if (ratio >= 1) return `목표 달성 확인. ${SOURCE_LABELS[state.lastSource] || '기록'} 기준으로 오늘 기록은 결재 가능한 상태입니다.`;
-	    if (metrics.streak >= 3) return `연속 ${metrics.streak}일 기록 중입니다. 작은 루틴이 이미 꽤 단단하게 쌓이고 있어요.`;
-	    if (state.steps > 0) return `오늘 기록은 ${sourceText} 기준으로 정리했습니다. 남은 걸음은 무리하지 않는 선에서 채워도 좋습니다.`;
-	    return '아직 오늘 기록은 비어 있습니다. 측정 시작을 누르면 제가 바로 서류를 열어둘게요.';
+	    const now = new Date();
+	    const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+	    const nowHour = now.getHours();
+	    const isLateNight = nowHour >= 22 || nowHour < 4;
+	    const isRainOrSnow = weatherState === 'rain' || weatherState === 'snow';
+
+	    const bucket = ratio >= 1 ? 'done'
+	      : metrics.goalStreak >= 2 ? 'goal-streak'
+	      : metrics.streak >= 3 ? 'streak'
+	      : ratio >= 0.5 ? 'half'
+	      : state.steps > 0 ? 'started'
+	      : 'empty';
+	    const memoKey = `${todayKey()}-${bucket}-${Math.floor(state.steps / 1000)}-${metrics.goalDays}-${metrics.streak}-${isWeekend}-${isLateNight}-${weatherState}`;
+
+	    if (bucket === 'done') {
+	      const lines = [
+	        `목표 달성 확인. ${SOURCE_LABELS[state.lastSource] || '기록'} 기준으로 오늘 기록은 결재 가능한 상태입니다.`,
+	        '오늘 목표는 완료되었습니다. 남은 시간은 기록보다 회복을 우선해도 좋겠습니다.',
+	        '선생님의 오늘 루틴은 깔끔하게 정리되었습니다. 주간 보고서에 좋은 표식으로 남겨둘게요.',
+	      ];
+	      if (isWeekend) lines.push('주간 목표 달성에 이어 주말까지 완벽하게 마무리하셨네요. 편안한 휴식 보내세요, 선생님.');
+	      if (isLateNight) lines.push('늦은 시간까지 목표를 마저 채우셨네요. 이제 따뜻하게 휴식을 취하세요.');
+	      if (isRainOrSnow) lines.push('궂은 날씨 속에서도 목표를 이루어 내셨군요. 옷과 몸을 잘 말려주세요, 선생님.');
+	      return stableMemoLine(lines, memoKey);
+	    }
+	    if (bucket === 'goal-streak') {
+	      const lines = [
+	        `목표 달성 연속 ${metrics.goalStreak}일입니다. 이 정도면 습관이라고 불러도 손색없겠네요.`,
+	        '목표 달성 흐름이 이어지고 있습니다. 오늘은 페이스를 무리하게 올리지 않아도 충분합니다.',
+	        '연속 달성 기록이 쌓이고 있어요. 기록 담당자로서 꽤 뿌듯한 장면입니다.',
+	      ];
+	      if (isWeekend) lines.push('주말에도 리듬을 잃지 않는 꾸준함이 돋보입니다. 샬레 서기로서 깊이 감탄하고 있어요.');
+	      return stableMemoLine(lines, memoKey);
+	    }
+	    if (bucket === 'streak') {
+	      const lines = [
+	        `연속 ${metrics.streak}일 기록 중입니다. 작은 루틴이 이미 꽤 단단하게 쌓이고 있어요.`,
+	        `최근 ${metrics.streak}일 동안 기록이 끊기지 않았습니다. 오늘도 짧게라도 남겨두면 흐름이 이어집니다.`,
+	        '매일 조금씩 적힌 기록은 생각보다 강합니다. 오늘의 분량도 차분히 채워볼까요?',
+	      ];
+	      if (isWeekend) lines.push('휴일에도 작은 발걸음을 계속 적어두고 있습니다. 무리하지 않는 여유로운 산책이면 돼요.');
+	      return stableMemoLine(lines, memoKey);
+	    }
+	    if (bucket === 'half') {
+	      const lines = [
+	        `오늘 기록은 ${sourceText} 기준으로 절반을 넘겼습니다. 남은 걸음은 두 번으로 나눠도 괜찮습니다.`,
+	        '중간 지점은 지났습니다. 이제부터는 속도보다 마무리 감각을 챙기면 좋겠습니다.',
+	        '오늘 기록의 중심선은 통과했습니다. 가볍게 한 번 더 움직이면 꽤 좋은 보고서가 되겠어요.',
+	      ];
+	      if (isLateNight) lines.push('밤이 깊어가지만 절반은 넘기셨군요. 무리한 야간 산책은 피하시고 조심히 이동하세요.');
+	      if (isRainOrSnow) lines.push('비나 눈이 오는 날에도 절반이나 채우셨네요. 발밑에 신경 써서 천천히 걸으세요.');
+	      return stableMemoLine(lines, memoKey);
+	    }
+	    if (bucket === 'started') {
+	      const lines = [
+	        `오늘 기록은 ${sourceText} 기준으로 정리했습니다. 남은 걸음은 무리하지 않는 선에서 채워도 좋습니다.`,
+	        '첫 기록이 남았습니다. 오늘은 이 흐름을 지키는 것만으로도 충분히 의미가 있습니다.',
+	        '선생님의 오늘 걸음이 기록장에 올라왔습니다. 다음 줄은 천천히 이어가도 괜찮아요.',
+	      ];
+	      if (isWeekend) lines.push('주말의 가벼운 시작이 적혔습니다. 바쁜 일상에서 벗어나 여유로운 걸음이기를 바라요.');
+	      if (isLateNight) lines.push('늦은 시간 첫 걸음이 찍혔습니다. 늦은 산책은 안전이 제일 중요하답니다.');
+	      return stableMemoLine(lines, memoKey);
+	    }
+	    const lines = [
+	      '아직 오늘 기록은 비어 있습니다. 측정 시작을 누르면 제가 바로 서류를 열어둘게요.',
+	      '오늘의 기록장은 깨끗한 첫 장입니다. 짧은 산책부터 시작해볼까요?',
+	      '무리한 목표보다 첫 걸음이 먼저입니다. 준비되면 제가 조용히 기록하겠습니다.',
+	    ];
+	    if (isWeekend) lines.push('주말의 편안한 정적 속에서 선생님의 첫 산책 기록을 조용히 기다리고 있습니다.');
+	    if (isLateNight) lines.push('밤이 아주 깊었습니다. 오늘 기록은 미뤄두고 깊은 잠에 드셔도 좋습니다.');
+	    if (isRainOrSnow) lines.push('바깥에 비나 눈이 내리고 있네요. 무리한 산책 대신 실내에서 가볍게 움직이셔도 괜찮습니다.');
+	    return stableMemoLine(lines, memoKey);
 	  }
 	  function renderBriefing(records, ratio) {
 	    const metrics = weeklyMetrics(records);
@@ -545,6 +737,9 @@
 	    const sourceNote = $('sourceNote');
 	    const weeklyBest = $('weeklyBest');
 	    const weeklyNext = $('weeklyNext');
+	    const weeklyAverage = $('weeklyAverage');
+	    const weeklyPace = $('weeklyPace');
+	    const weeklyFocusEl = $('weeklyFocus');
 	    const noaMemo = $('noaMemo');
 	    if (todayBrief) {
 	      todayBrief.textContent = state.steps > 0
@@ -552,11 +747,14 @@
 	        : '아직 오늘 기록이 시작되지 않았습니다.';
 	    }
 	    if (weeklyBrief) {
-	      weeklyBrief.textContent = `최근 7일 누적 ${metrics.weekTotal.toLocaleString()}보, 목표 달성 ${metrics.goalDays}일, 연속 기록 ${metrics.streak}일입니다.`;
+	      weeklyBrief.textContent = `최근 7일 누적 ${metrics.weekTotal.toLocaleString()}보, 기록일 ${metrics.activeDays}일, 목표 달성 ${metrics.goalDays}일입니다.`;
 	    }
 	    if (sourceNote) sourceNote.textContent = sourceSummary(state.sources, state.steps);
 	    if (weeklyBest) weeklyBest.textContent = `최고 기록: ${weekdayLabel(metrics.best.date)} ${metrics.best.steps.toLocaleString()}보`;
 	    if (weeklyNext) weeklyNext.textContent = `다음 목표: ${nextWeeklyTarget(metrics)}`;
+	    if (weeklyAverage) weeklyAverage.textContent = formatSteps(metrics.average);
+	    if (weeklyPace) weeklyPace.textContent = `${metrics.pacePct}%`;
+	    if (weeklyFocusEl) weeklyFocusEl.textContent = weeklyFocus(metrics, ratio, remain);
 	    if (noaMemo) noaMemo.textContent = buildNoaMemo(metrics, ratio);
 	  }
 	  
@@ -589,10 +787,10 @@
     
     if (hpRemaining <= 0) {
       $('raid-cleared').style.display = 'flex';
-      if (!localStorage.getItem(weekId)) {
-        localStorage.setItem(weekId, 'cleared');
+      if (!storage.getItem(weekId)) {
+        storage.setItem(weekId, 'cleared');
         pyroxeneBalance += 100;
-        localStorage.setItem('noa-pyroxene', pyroxeneBalance);
+        storage.setItem('noa-pyroxene', pyroxeneBalance);
         celebrate(['#f43f5e', '#fb7299', '#ffd36b', '#ffffff']);
         showMomotalk("주간 총력전 보스를 무사히 토벌했습니다! 보상으로 청휘석 100개가 지급되었습니다.");
         renderPyroxene();
@@ -608,6 +806,9 @@
 
 	    if (metrics.streak >= 3) unlockBadge('streak_3');
 	    if (metrics.streak >= 7) unlockBadge('streak_7');
+	    if (metrics.goalDays >= 3) unlockBadge('goal_3');
+	    if (metrics.goalDays >= 7) unlockBadge('perfect_week');
+	    if (metrics.weekTotal >= 50000) unlockBadge('weekly_50k');
 
 	    $('phase').textContent = phaseFor(ratio);
 	    $('streakTop').textContent = `연속 ${metrics.streak}일`;
@@ -643,13 +844,13 @@
     // 레벨업(친밀도) 연출
     if (affection.level > lastAffectionLevel) {
       lastAffectionLevel = affection.level;
-      localStorage.setItem('noa-affection-level', affection.level);
+      storage.setItem('noa-affection-level', affection.level);
       celebrate(['#a78bfa', '#c4b5fd', '#7dd3fc', '#ffffff']);
       showMomotalk(`친밀도 Lv.${affection.level} 달성 — "${affection.title}". 선생님과 함께한 기록이 쌓여가네요.`);
     } else if (affection.level !== lastAffectionLevel) {
       // 초기화/하향 시 동기화만
       lastAffectionLevel = affection.level;
-      localStorage.setItem('noa-affection-level', affection.level);
+      storage.setItem('noa-affection-level', affection.level);
     }
   }
 
@@ -667,8 +868,8 @@
       ? `목표 ${state.goal.toLocaleString()}보까지 ${remain.toLocaleString()}보 남음`
       : `목표 ${state.goal.toLocaleString()}보 달성 완료!`;
       
-    const height = +(localStorage.getItem('noa-user-height') || 170);
-    const weight = +(localStorage.getItem('noa-user-weight') || 65);
+    const height = +(storage.getItem('noa-user-height') || 170);
+    const weight = +(storage.getItem('noa-user-weight') || 65);
     const stride = (height * 0.414) / 100; 
     const km = (state.steps * stride) / 1000;
     els.dist.textContent = km.toFixed(2);
@@ -693,8 +894,8 @@
 	        const nowKey = todayKey();
 	        if (state.currentDateKey && state.currentDateKey !== nowKey) {
 	          // 자정(Midnight) 지남 -> 초기화 처리 및 어제 누적치를 lifetime-base에 안전하게 더해 O(1) 성능 유지
-	          const baseVal = +(localStorage.getItem('noa-manbogi-lifetime-base') || 0);
-	          localStorage.setItem('noa-manbogi-lifetime-base', baseVal + state.steps);
+	          const baseVal = +(storage.getItem('noa-manbogi-lifetime-base') || 0);
+	          storage.setItem('noa-manbogi-lifetime-base', baseVal + state.steps);
 	          
 	          state.steps = 0;
 	          state.goalReachedToday = false;
@@ -783,9 +984,11 @@
 	  }
 
 	  // HealthKit/백그라운드/생명주기는 공유 코어(NoaCore)에 위임. 풀버전 전용 후처리만 여기서.
-	  let healthSyncEnabled = localStorage.getItem('noa-health-sync-enabled') === '1';
-	  function syncHealthKit() {
+	  let healthSyncEnabled = storage.getItem('noa-health-sync-enabled') === '1';
+	  let healthSyncProblem = '';
+	  function syncHealthKit(requestAuthorization = false) {
 	    return C.syncHealthKit({
+	      requestAuthorization,
 	      getSteps: () => state.steps,
 	      setSteps: n => {
 	        const delta = Math.max(0, Math.round(+n || 0) - state.steps);
@@ -800,11 +1003,21 @@
 	      }
 	    });
 	  }
-	  function maybeSyncHealthKit() {
-	    if (!healthSyncEnabled) return;
-	    return syncHealthKit();
+	  async function maybeSyncHealthKit() {
+	    if (!healthSyncEnabled) return { ok: false, reason: 'disabled' };
+	    const result = await syncHealthKit(false);
+	    if (result && result.reason === 'permission-denied') {
+	      healthSyncEnabled = false;
+	      healthSyncProblem = 'HealthKit: 권한 필요';
+	      storage.removeItem('noa-health-sync-enabled');
+	      updateSetupChecklist();
+	    }
+	    return result;
 	  }
-	  function initBackgroundTasks() { return C.initBackgroundTasks(maybeSyncHealthKit); }
+	  function initBackgroundTasks() {
+	    if (!healthSyncEnabled) return Promise.resolve(false);
+	    return C.initBackgroundTasks(maybeSyncHealthKit);
+	  }
 	  function setupAppLifecycle() { return C.setupAppLifecycle(maybeSyncHealthKit); }
 
   let audioUnlocked = false;
@@ -863,11 +1076,11 @@
 		  if ($('weather-btn')) {
 		    $('weather-btn').onclick = fetchWeather;
 		  }
-		  if ($('setup-open')) $('setup-open').onclick = openSetupModal;
+		  if ($('setup-open')) $('setup-open').onclick = () => openSetupModal($('setup-open'));
 		  if ($('setup-close')) $('setup-close').onclick = closeSetupModal;
 		  if ($('setup-done')) {
 		    $('setup-done').onclick = () => {
-		      localStorage.setItem('noa-setup-reviewed', '1');
+		      storage.setItem('noa-setup-reviewed', '1');
 		      closeSetupModal();
 		      showMomotalk("시작 전 점검을 기록해 두었습니다. 이제 오늘의 산책 기록을 시작해볼까요?");
 		    };
@@ -878,7 +1091,7 @@
 		  if ($('setup-notification-btn')) $('setup-notification-btn').onclick = requestNotificationSetup;
 			  $('voice').onclick = () => {
 		    voiceOn = !voiceOn;
-	    localStorage.setItem('noa-manbogi-voice', voiceOn ? '1' : '0');
+	    storage.setItem('noa-manbogi-voice', voiceOn ? '1' : '0');
 	    updateVoiceBtn();
 	    if (navigator.vibrate) navigator.vibrate([15]);
 	    if (voiceOn) speak('음성을 켰어요, 선생님.');
@@ -1025,12 +1238,12 @@
   }
 
   $('settings-btn').onclick = () => {
-    $('user-height').value = localStorage.getItem('noa-user-height') || 170;
-    $('user-weight').value = localStorage.getItem('noa-user-weight') || 65;
-    $('gemini-key').value = localStorage.getItem('noa-gemini-key') || '';
-    $('elevenlabs-key').value = localStorage.getItem('noa-elevenlabs-key') || '';
-    $('elevenlabs-voice').value = localStorage.getItem('noa-elevenlabs-voice') || '';
-    $('settings-modal').classList.remove('hidden');
+    $('user-height').value = storage.getItem('noa-user-height') || 170;
+    $('user-weight').value = storage.getItem('noa-user-weight') || 65;
+    $('gemini-key').value = storage.getItem('noa-gemini-key') || '';
+    $('elevenlabs-key').value = storage.getItem('noa-elevenlabs-key') || '';
+    $('elevenlabs-voice').value = storage.getItem('noa-elevenlabs-voice') || '';
+    openModal('settings-modal', $('settings-btn'));
   };
   $('settings-close').onclick = () => {
     const h = $('user-height').value;
@@ -1039,24 +1252,182 @@
     const key = $('elevenlabs-key').value.trim();
     const voice = $('elevenlabs-voice').value.trim();
     
-    if (h) localStorage.setItem('noa-user-height', h);
-    if (w) localStorage.setItem('noa-user-weight', w);
+    if (h) storage.setItem('noa-user-height', h);
+    if (w) storage.setItem('noa-user-weight', w);
     
-    localStorage.setItem('noa-gemini-key', gKey);
+    storage.setItem('noa-gemini-key', gKey);
     GEMINI_API_KEY = gKey;
-    localStorage.setItem('noa-elevenlabs-key', key);
+    storage.setItem('noa-elevenlabs-key', key);
     ELEVENLABS_API_KEY = key;
-    localStorage.setItem('noa-elevenlabs-voice', voice);
+    storage.setItem('noa-elevenlabs-voice', voice);
     ELEVENLABS_VOICE_ID = voice;
     
-    $('settings-modal').classList.add('hidden');
+    closeModal('settings-modal');
     render(); // 바뀐 설정으로 다시 계산
     updateChatInputPlaceholder();
   };
 
+  const BACKUP_EXCLUDED_KEYS = new Set([
+    'noa-gemini-key',
+    'noa-elevenlabs-key',
+    'noa-elevenlabs-voice',
+  ]);
+  function isBackupKey(key) {
+    return (key.startsWith('noa-') || key.startsWith('momorun-')) && !BACKUP_EXCLUDED_KEYS.has(key);
+  }
+  function exportLocalData() {
+    const keys = {};
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (key && isBackupKey(key)) keys[key] = storage.getItem(key);
+    }
+    const payload = {
+      app: 'momo-run',
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      excluded: Array.from(BACKUP_EXCLUDED_KEYS),
+      keys,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `momo-run-backup-${todayKey().replace(STORAGE_PREFIX, '')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showMomotalk(`백업 파일을 만들었습니다. API 키는 포함하지 않았습니다. (${Object.keys(keys).length}개 항목)`);
+  }
+  let pendingBackupEntries = null;
+  function importLocalData(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const payload = JSON.parse(String(reader.result || '{}'));
+        if (!payload || payload.app !== 'momo-run' || !payload.keys || typeof payload.keys !== 'object') {
+          throw new Error('Invalid backup');
+        }
+        const entries = Object.entries(payload.keys).filter(([key]) => isBackupKey(key));
+        if (!entries.length) {
+          showMomotalk('복원할 모모런 기록을 찾지 못했습니다.');
+          return;
+        }
+
+        // 백업 내용 세부 분석 (날짜 범위, 누적 걸음수 등)
+        const dailyEntries = entries.filter(([k]) => k.startsWith(STORAGE_PREFIX) && k !== 'noa-manbogi-goal' && k !== 'noa-manbogi-voice');
+        const dates = dailyEntries.map(([k]) => k.replace(STORAGE_PREFIX, '')).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+        let totalStepsInBackup = 0;
+        dailyEntries.forEach(([, val]) => {
+          try {
+            const parsed = JSON.parse(String(val || '{}'));
+            if (parsed && typeof parsed.steps === 'number') totalStepsInBackup += Math.max(0, parsed.steps);
+          } catch (_) {}
+        });
+
+        const exportedAtStr = payload.exportedAt ? new Date(payload.exportedAt).toLocaleString('ko-KR') : '알 수 없음';
+        const dateRangeStr = dates.length > 0 ? `${dates[0]} ~ ${dates[dates.length - 1]}` : '날짜 기록 없음';
+
+        const infoEl = $('backup-preview-info');
+        if (infoEl) {
+          infoEl.innerHTML = '';
+          const title = document.createElement('div');
+          title.style.fontWeight = '700';
+          title.style.color = 'var(--cyan)';
+          title.style.marginBottom = '4px';
+          title.textContent = '📋 백업 데이터 요약';
+
+          const timeItem = document.createElement('div');
+          timeItem.style.fontSize = '13px';
+          timeItem.textContent = `• 백업 생성 시각: ${exportedAtStr}`;
+
+          const rangeItem = document.createElement('div');
+          rangeItem.style.fontSize = '13px';
+          rangeItem.textContent = `• 기록 날짜 범위: ${dateRangeStr} (총 ${dailyEntries.length}일치)`;
+
+          const stepsItem = document.createElement('div');
+          stepsItem.style.fontSize = '13px';
+          stepsItem.textContent = `• 백업 총 누적 걸음: ${totalStepsInBackup.toLocaleString()}보`;
+
+          const countItem = document.createElement('div');
+          countItem.style.fontSize = '13px';
+          countItem.textContent = `• 복원 예정 항목: 총 ${entries.length}개 설정/기록 키`;
+
+          infoEl.appendChild(title);
+          infoEl.appendChild(timeItem);
+          infoEl.appendChild(rangeItem);
+          infoEl.appendChild(stepsItem);
+          infoEl.appendChild(countItem);
+        }
+
+        pendingBackupEntries = entries;
+        openModal('backup-preview-modal', $('import-data'));
+      } catch (err) {
+        console.error(err);
+        showMomotalk('백업 파일을 읽지 못했습니다. 모모런 백업 JSON인지 확인해 주세요.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  if ($('backup-preview-confirm')) {
+    $('backup-preview-confirm').onclick = () => {
+      if (!pendingBackupEntries || !pendingBackupEntries.length) return;
+      pendingBackupEntries.forEach(([key, value]) => storage.setItem(key, String(value)));
+      pendingBackupEntries = null;
+      closeModal('backup-preview-modal');
+      showMomotalk('백업 복원이 완료되었습니다. 화면을 새로고침합니다.');
+      setTimeout(() => location.reload(), 700);
+    };
+  }
+  if ($('backup-preview-cancel')) {
+    $('backup-preview-cancel').onclick = () => {
+      pendingBackupEntries = null;
+      closeModal('backup-preview-modal');
+    };
+  }
+  if ($('backup-preview-close')) {
+    $('backup-preview-close').onclick = () => {
+      pendingBackupEntries = null;
+      closeModal('backup-preview-modal');
+    };
+  }
+  function resetWalkRecordsOnly() {
+    if (!confirm('걸음 기록과 누적 걸음 수만 초기화할까요? 업적, 상점, 설정은 유지됩니다.')) return;
+    const removeKeys = [];
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (!key) continue;
+      const isDailyRecord = key.startsWith(STORAGE_PREFIX) && key !== 'noa-manbogi-goal' && key !== 'noa-manbogi-voice';
+      if (isDailyRecord || key === 'noa-manbogi-lifetime-base' || key === 'noa-pyroxene-lifetime') removeKeys.push(key);
+    }
+    removeKeys.forEach(key => storage.removeItem(key));
+    state.steps = 0;
+    state.sources = makeEmptySources();
+    state.lastSource = '';
+    state.goalReachedToday = false;
+    state.easterEggShown = false;
+    cachedBaseLifetimeSteps = 0;
+    shownMile = -1;
+    render();
+    renderHistory(0);
+    saveNow();
+    showMomotalk('걸음 기록을 초기화했습니다. 설정과 업적은 그대로 유지했습니다.');
+  }
+  if ($('export-data')) $('export-data').onclick = exportLocalData;
+  if ($('import-data')) $('import-data').onclick = () => $('import-data-file').click();
+  if ($('import-data-file')) {
+    $('import-data-file').onchange = event => {
+      importLocalData(event.target.files && event.target.files[0]);
+      event.target.value = '';
+    };
+  }
+  if ($('reset-records')) $('reset-records').onclick = resetWalkRecordsOnly;
+
   // --- 인게임 보상 시스템 (청휘석) ---
-  let pyroxeneBalance = +(localStorage.getItem('noa-pyroxene')) || 0;
-  let pyroxeneLifetime = +(localStorage.getItem('noa-pyroxene-lifetime')) || 0;
+  let pyroxeneBalance = +(storage.getItem('noa-pyroxene')) || 0;
+  let pyroxeneLifetime = +(storage.getItem('noa-pyroxene-lifetime')) || 0;
   
   function renderPyroxene() {
     const el = $('pyroxene-count');
@@ -1070,8 +1441,8 @@
       const earned = newLifetime - pyroxeneLifetime;
       pyroxeneBalance += earned;
       pyroxeneLifetime = newLifetime;
-      localStorage.setItem('noa-pyroxene', pyroxeneBalance);
-      localStorage.setItem('noa-pyroxene-lifetime', pyroxeneLifetime);
+      storage.setItem('noa-pyroxene', pyroxeneBalance);
+      storage.setItem('noa-pyroxene-lifetime', pyroxeneLifetime);
       showMomotalk(`청휘석 ${earned}개를 발견했습니다! (보유: ${pyroxeneBalance}개)`);
       renderPyroxene();
     }
@@ -1086,16 +1457,16 @@
     { id: 'voice_secret', type: 'voice', name: '특별 보이스 해금', cost: 50, unlocked: false },
   ];
   function getPurchasedItems() {
-    try { return JSON.parse(localStorage.getItem('noa-purchased')) || []; }
+    try { return JSON.parse(storage.getItem('noa-purchased')) || []; }
     catch(e) { return []; }
   }
   function purchaseItem(id, cost) {
     if (pyroxeneBalance >= cost) {
       pyroxeneBalance -= cost;
-      localStorage.setItem('noa-pyroxene', pyroxeneBalance);
+      storage.setItem('noa-pyroxene', pyroxeneBalance);
       const purchased = getPurchasedItems();
       purchased.push(id);
-      localStorage.setItem('noa-purchased', JSON.stringify(purchased));
+      storage.setItem('noa-purchased', JSON.stringify(purchased));
       renderPyroxene();
       renderShop();
       showMomotalk("구매가 완료되었습니다, 선생님!");
@@ -1106,9 +1477,9 @@
   function equipTheme(id) {
     if (navigator.vibrate) navigator.vibrate([15]);
     if (id === 'theme_default') {
-      localStorage.removeItem('noa-equipped-theme');
+      storage.removeItem('noa-equipped-theme');
     } else {
-      localStorage.setItem('noa-equipped-theme', id);
+      storage.setItem('noa-equipped-theme', id);
     }
     applyPurchasedItems();
     renderShop();
@@ -1116,7 +1487,7 @@
   }
   function applyPurchasedItems() {
     document.body.classList.remove('theme-1', 'theme-2', 'theme-3');
-    const equipped = localStorage.getItem('noa-equipped-theme');
+    const equipped = storage.getItem('noa-equipped-theme');
     if (equipped) {
       document.body.classList.add(equipped.replace('_', '-'));
     }
@@ -1128,19 +1499,19 @@
     if (!list) return;
     list.innerHTML = SHOP_ITEMS.map(item => {
       const isPurchased = item.cost === 0 || purchased.includes(item.id);
-      const equipped = localStorage.getItem('noa-equipped-theme');
+      const equipped = storage.getItem('noa-equipped-theme');
       const isEquipped = (equipped === item.id) || (item.id === 'theme_default' && !equipped);
       let btnHtml = '';
       if (!isPurchased) {
-        btnHtml = `<button data-action="buy" data-id="${item.id}" data-cost="${item.cost}" style="background:#7dd3fc; color:#0f172a; padding:6px 12px; font-size:12px; font-weight:bold; border-radius:8px; border:none; cursor:pointer;">${item.cost} 구매</button>`;
+        btnHtml = `<button class="shop-btn shop-btn-buy" type="button" data-action="buy" data-id="${item.id}" data-cost="${item.cost}">${item.cost} 구매</button>`;
       } else if (item.type === 'theme') {
         if (isEquipped) {
-          btnHtml = `<button disabled style="background:rgba(255,255,255,0.1); color:var(--good); padding:6px 12px; font-size:12px; border-radius:8px; border:1px solid var(--good);">적용됨</button>`;
+          btnHtml = `<button class="shop-btn shop-btn-equipped" type="button" disabled>적용됨</button>`;
         } else {
-          btnHtml = `<button data-action="equip" data-id="${item.id}" style="background:rgba(255,255,255,0.1); color:#fff; padding:6px 12px; font-size:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.4); cursor:pointer;">적용하기</button>`;
+          btnHtml = `<button class="shop-btn shop-btn-equip" type="button" data-action="equip" data-id="${item.id}">적용하기</button>`;
         }
       } else {
-        btnHtml = `<button disabled style="background:rgba(255,255,255,0.1); color:var(--muted); padding:6px 12px; font-size:12px; border-radius:8px; border:none;">보유중</button>`;
+        btnHtml = `<button class="shop-btn shop-btn-owned" type="button" disabled>보유중</button>`;
       }
       
       return `
@@ -1157,12 +1528,9 @@
   // --- 개발자(DEV) 오버레이 모달 ---
   const devBtn = $('dev-btn');
   if (devBtn) {
-    devBtn.onclick = (e) => {
-      e.preventDefault();
-      $('dev-modal').classList.remove('hidden');
-    };
+    devBtn.onclick = () => openModal('dev-modal', devBtn);
   }
-  $('dev-close').onclick = () => $('dev-modal').classList.add('hidden');
+  $('dev-close').onclick = () => closeModal('dev-modal');
   
   $('dev-add-10k').onclick = () => {
     addSteps(10000, 'dev');
@@ -1171,7 +1539,7 @@
   
   $('dev-add-pyroxene').onclick = () => {
     pyroxeneBalance += 1000;
-    localStorage.setItem('noa-pyroxene', pyroxeneBalance);
+    storage.setItem('noa-pyroxene', pyroxeneBalance);
     renderPyroxene();
     showMomotalk("개발자 권한으로 1,000 청휘석이 무한 복사(?) 되었습니다.");
   };
@@ -1186,13 +1554,13 @@
       () => showMomotalk("아리스: 빠밤! 아리스, 산책 퀘스트를 수락했습니다! 경험치가 상승합니다!"),
       () => showMomotalk("히나: ...선생님. 걷는 건 좋지만 무리하지는 마. 쉴 땐 쉬어야 하니까.")
     ];
-    $('dev-modal').classList.add('hidden');
+    closeModal('dev-modal');
     pick(events)();
   };
   
   $('dev-reset-shop').onclick = () => {
-    localStorage.removeItem('noa-purchased');
-    localStorage.removeItem('noa-equipped-theme');
+    storage.removeItem('noa-purchased');
+    storage.removeItem('noa-equipped-theme');
     applyPurchasedItems();
     renderShop();
     showMomotalk("상점 환불 완료. 구매 내역이 초기화되었습니다.");
@@ -1203,14 +1571,14 @@
     const d = new Date(now);
     d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1));
     const weekId = `noa-raid-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    localStorage.removeItem(weekId);
+    storage.removeItem(weekId);
     renderHistory(Math.min(state.steps / state.goal, 1));
     showMomotalk("총력전 보스가 부활했습니다. 다시 공략해 보세요!");
   };
   
   $('dev-factory-reset').onclick = () => {
     if (confirm("정말로 모든 걸음 수, 청휘석, 상점 내역을 지우고 앱을 초기화하시겠습니까?")) {
-      localStorage.clear();
+      storage.clear();
       location.reload();
     }
   };
@@ -1218,11 +1586,11 @@
   if ($('pyroxene-btn')) {
     $('pyroxene-btn').onclick = () => {
       renderShop();
-      $('shop-modal').classList.remove('hidden');
+      openModal('shop-modal', $('pyroxene-btn'));
     };
   }
   if ($('shop-close')) {
-    $('shop-close').onclick = () => $('shop-modal').classList.add('hidden');
+    $('shop-close').onclick = () => closeModal('shop-modal');
   }
   // 상점 버튼 이벤트 위임 (전역 노출 없이 IIFE 안에서 처리)
   if ($('shop-list')) {
@@ -1237,39 +1605,50 @@
   // --- 업적(Badges) 시스템 ---
   const BADGE_DEFS = [
     { id: 'first_10k', icon: '10K', name: '첫 1만보', desc: '루틴의 시작! 하루 10,000보 달성' },
-    { id: 'streak_3', icon: '3 DAYS', name: '작심삼일 극복', desc: '3일 연속 목표 걸음 수 달성' },
-    { id: 'streak_7', icon: '7 DAYS', name: '기록의 달인', desc: '7일 연속 목표 걸음 수 달성' },
+    { id: 'streak_3', icon: '3 DAYS', name: '작심삼일 극복', desc: '3일 연속 기록 남기기' },
+    { id: 'streak_7', icon: '7 DAYS', name: '기록의 달인', desc: '7일 연속 기록 남기기' },
+    { id: 'goal_3', icon: 'GOAL 3', name: '우수 보고서', desc: '최근 7일 중 목표 달성 3일' },
+    { id: 'perfect_week', icon: 'PERFECT', name: '완벽한 주간 기록', desc: '최근 7일 모두 목표 달성' },
+    { id: 'weekly_50k', icon: '50K', name: '주간 5만보', desc: '최근 7일 누적 50,000보 달성' },
     { id: 'night_owl', icon: 'NIGHT', name: '철야의 서기', desc: '자정~새벽 2시 사이에 1,000보 이상 기록' },
     { id: 'noa_bday', icon: 'SECRET', name: '우시오 노아의 생일', desc: '하루 4,130보 정확히 달성 후 기록' },
   ];
   function getUnlockedBadges() {
-    try { return JSON.parse(localStorage.getItem('noa-badges')) || []; }
+    try { return JSON.parse(storage.getItem('noa-badges')) || []; }
     catch(e) { return []; }
   }
   function unlockBadge(id) {
     const unlocked = getUnlockedBadges();
     if (!unlocked.includes(id)) {
       unlocked.push(id);
-      localStorage.setItem('noa-badges', JSON.stringify(unlocked));
+      storage.setItem('noa-badges', JSON.stringify(unlocked));
       const b = BADGE_DEFS.find(x => x.id === id);
       if (b) showMomotalk(`[업적 달성] ${b.name} : ${b.desc}`);
     }
+  }
+  function renderAchievementSummary(unlocked) {
+    const summary = $('achievements-summary');
+    if (!summary) return;
+    const next = BADGE_DEFS.find(b => !unlocked.includes(b.id));
+    summary.textContent = next
+      ? `해금 ${unlocked.length}/${BADGE_DEFS.length} · 다음 후보: ${next.name}`
+      : `해금 ${unlocked.length}/${BADGE_DEFS.length} · 모든 인증 기록을 완료했습니다.`;
   }
 
   // --- 모모톡 히스토리 ---
   function saveMomotalkHistory(msg) {
     try {
-      const hist = JSON.parse(localStorage.getItem('noa-momotalk-hist')) || [];
+      const hist = JSON.parse(storage.getItem('noa-momotalk-hist')) || [];
       hist.push({ time: Date.now(), msg });
       if (hist.length > 50) hist.shift(); // 최대 50개 유지
-      localStorage.setItem('noa-momotalk-hist', JSON.stringify(hist));
+      storage.setItem('noa-momotalk-hist', JSON.stringify(hist));
     } catch(e) {}
   }
 
   // --- 모모톡 메신저 & 히스토리 통합 로직 ---
   let chatHistory = [];
   try {
-    chatHistory = JSON.parse(localStorage.getItem('noa-momotalk-chat')) || [
+    chatHistory = JSON.parse(storage.getItem('noa-momotalk-chat')) || [
       { sender: 'model', time: Date.now(), msg: "선생님, 오늘도 기록 잘 부탁드려요. 무슨 이야기든 들려주세요!" }
     ];
   } catch(e) {
@@ -1280,11 +1659,11 @@
 
   function saveChatHistory() {
     try {
-      // 대화 기록 무제한 누적으로 인한 localStorage QuotaExceededError 방지
+      // 대화 기록 무제한 누적으로 인한 storage QuotaExceededError 방지
       if (chatHistory.length > 100) {
         chatHistory = chatHistory.slice(-100);
       }
-      localStorage.setItem('noa-momotalk-chat', JSON.stringify(chatHistory));
+      storage.setItem('noa-momotalk-chat', JSON.stringify(chatHistory));
     } catch(e) {}
   }
 
@@ -1343,7 +1722,7 @@
     const list = $('momotalk-log-view');
     if (!list) return;
 	    let hist = [];
-	    try { hist = JSON.parse(localStorage.getItem('noa-momotalk-hist')) || []; } catch(e) {}
+	    try { hist = JSON.parse(storage.getItem('noa-momotalk-hist')) || []; } catch(e) {}
 	    list.textContent = '';
 	    if (hist.length === 0) {
 	      const empty = document.createElement('div');
@@ -1370,15 +1749,15 @@
 	  }
 
   function getSystemPrompt() {
-    const height = +(localStorage.getItem('noa-user-height') || 170);
-    const weight = +(localStorage.getItem('noa-user-weight') || 65);
+    const height = +(storage.getItem('noa-user-height') || 170);
+    const weight = +(storage.getItem('noa-user-weight') || 65);
     const stride = (height * 0.414) / 100;
     const km = (state.steps * stride) / 1000;
     const hours = (state.steps * 0.7) / 3600;
     const kcal = Math.round(3.5 * weight * hours);
     const ratio = Math.min(state.steps / state.goal, 1);
     const pct = Math.round(ratio * 100);
-	    const isStamped = localStorage.getItem('noa-sensei-stamped') === '1';
+	    const isStamped = storage.getItem('noa-sensei-stamped') === '1';
 	    
 	    const records = recentRecords();
 	    const metrics = weeklyMetrics(records);
@@ -1509,30 +1888,29 @@
   }
 
   // 탭 클릭 이벤트
-  $('tab-chat').onclick = () => {
-    $('tab-chat').classList.add('active');
-    $('tab-log').classList.remove('active');
-    $('momotalk-chat-view').style.display = 'flex';
-    $('momotalk-log-view').style.display = 'none';
-    renderChat();
-  };
+  function selectMomotalkTab(tab) {
+    const isChat = tab === 'chat';
+    $('tab-chat').classList.toggle('active', isChat);
+    $('tab-log').classList.toggle('active', !isChat);
+    $('tab-chat').setAttribute('aria-selected', String(isChat));
+    $('tab-log').setAttribute('aria-selected', String(!isChat));
+    $('momotalk-chat-view').hidden = !isChat;
+    $('momotalk-log-view').hidden = isChat;
+    if (isChat) renderChat();
+    else renderLogs();
+  }
 
-  $('tab-log').onclick = () => {
-    $('tab-chat').classList.remove('active');
-    $('tab-log').classList.add('active');
-    $('momotalk-chat-view').style.display = 'none';
-    $('momotalk-log-view').style.display = 'flex';
-    renderLogs();
-  };
+  $('tab-chat').onclick = () => selectMomotalkTab('chat');
+  $('tab-log').onclick = () => selectMomotalkTab('log');
 
   // 모모톡 히스토리 모달 UI
   $('momotalk-btn').onclick = () => {
-    $('tab-chat').click();
+    selectMomotalkTab('chat');
     updateChatInputPlaceholder();
-    $('momotalk-history-modal').classList.remove('hidden');
+    openModal('momotalk-history-modal', $('momotalk-btn'));
     renderChat();
   };
-  $('momotalk-history-close').onclick = () => $('momotalk-history-modal').classList.add('hidden');
+  $('momotalk-history-close').onclick = () => closeModal('momotalk-history-modal');
 
   $('momotalk-chat-send').onclick = handleSendMessage;
   $('momotalk-chat-input').onkeydown = (e) => {
@@ -1545,6 +1923,7 @@
   $('achievements-btn').onclick = () => {
     const list = $('achievements-list');
     const unlocked = getUnlockedBadges();
+    renderAchievementSummary(unlocked);
     list.innerHTML = BADGE_DEFS.map(b => {
       const isUnl = unlocked.includes(b.id);
       const cssClass = isUnl ? 'badge-item unlocked' : 'badge-item locked';
@@ -1556,22 +1935,26 @@
         </div>
       `;
     }).join('');
-    $('achievements-modal').classList.remove('hidden');
+    openModal('achievements-modal', $('achievements-btn'));
   };
-  $('achievements-close').onclick = () => $('achievements-modal').classList.add('hidden');
+  $('achievements-close').onclick = () => closeModal('achievements-modal');
 
 	  // 푸시 알림 (Local Notifications)
-	  let notificationsEnabled = localStorage.getItem('noa-notifications-enabled') === '1';
+	  let notificationsEnabled = storage.getItem('noa-notifications-enabled') === '1';
 	  async function setupNotifications(requestPermission = false) {
-	    if (window.Capacitor && window.Capacitor.isNative && window.Capacitor.Plugins.LocalNotifications) {
-	      try {
-	        const LN = window.Capacitor.Plugins.LocalNotifications;
+	    const LN = C.getNativePlugin('LocalNotifications');
+	    if (!LN) return { ok: false, reason: 'unavailable' };
+	    try {
 	        const perm = requestPermission
 	          ? await LN.requestPermissions()
 	          : (typeof LN.checkPermissions === 'function' ? await LN.checkPermissions() : { display: 'prompt' });
-	        if (perm.display !== 'granted') return;
+	        if (perm.display !== 'granted') {
+	          notificationsEnabled = false;
+	          storage.removeItem('noa-notifications-enabled');
+	          return { ok: false, reason: 'permission-denied' };
+	        }
 	        notificationsEnabled = true;
-	        localStorage.setItem('noa-notifications-enabled', '1');
+	        storage.setItem('noa-notifications-enabled', '1');
 	        
 	        await LN.cancel({ notifications: [{ id: 1 }, { id: 2 }] });
         
@@ -1591,11 +1974,14 @@
               schedule: { on: { hour: 20, minute: 0 } },
               smallIcon: "ic_stat_name"
             }
-          ]
-        });
-      } catch (err) {
-	        console.error("푸시 알림 설정 실패:", err);
-	      }
+	          ]
+	        });
+	      return { ok: true };
+	    } catch (err) {
+	      notificationsEnabled = false;
+	      storage.removeItem('noa-notifications-enabled');
+	      console.error("푸시 알림 설정 실패:", err);
+	      return { ok: false, reason: 'error' };
 	    }
 	  }
 
@@ -1616,7 +2002,7 @@
 	      motionReady
 	    );
 	    setSetupState('health',
-	      healthSyncEnabled ? 'HealthKit: 연동 켜짐' : 'HealthKit: 선택 연동',
+	      healthSyncEnabled ? 'HealthKit: 연동 준비됨' : healthSyncProblem || 'HealthKit: 선택 연동',
 	      healthSyncEnabled
 	    );
 	    setSetupState('weather',
@@ -1628,14 +2014,12 @@
 	      notificationsEnabled
 	    );
 	  }
-	  function openSetupModal() {
+	  function openSetupModal(trigger = null) {
 	    updateSetupChecklist();
-	    const modal = $('setup-modal');
-	    if (modal) modal.classList.remove('hidden');
+	    openModal('setup-modal', trigger);
 	  }
 	  function closeSetupModal() {
-	    const modal = $('setup-modal');
-	    if (modal) modal.classList.add('hidden');
+	    closeModal('setup-modal');
 	  }
 	  async function requestMotionSetup() {
 	    if (typeof DeviceMotionEvent === 'undefined') {
@@ -1655,22 +2039,35 @@
 	    setSetupState('motion', '동작 센서: 측정 가능', true);
 	  }
 	  async function requestHealthSetup() {
-	    if (!(window.Capacitor && window.Capacitor.isNative && window.Capacitor.Plugins.Health)) {
+	    if (!C.getNativePlugin('Health')) {
 	      setSetupState('health', 'HealthKit: 앱 빌드에서 사용 가능');
 	      return;
 	    }
-	    healthSyncEnabled = true;
-	    localStorage.setItem('noa-health-sync-enabled', '1');
-	    await syncHealthKit();
-	    updateSetupChecklist();
+	    setSetupState('health', 'HealthKit: 권한 확인 중');
+	    const result = await syncHealthKit(true);
+	    healthSyncEnabled = Boolean(result && result.ok);
+	    if (healthSyncEnabled) {
+	      healthSyncProblem = '';
+	      storage.setItem('noa-health-sync-enabled', '1');
+	      await initBackgroundTasks();
+	      updateSetupChecklist();
+	      return;
+	    }
+	    storage.removeItem('noa-health-sync-enabled');
+	    healthSyncProblem = result && result.reason === 'permission-denied'
+	      ? 'HealthKit: 권한 필요'
+	      : 'HealthKit: 연동 실패';
+	    setSetupState('health', healthSyncProblem);
 	  }
 	  async function requestNotificationSetup() {
-	    if (!(window.Capacitor && window.Capacitor.isNative && window.Capacitor.Plugins.LocalNotifications)) {
+	    if (!C.getNativePlugin('LocalNotifications')) {
 	      setSetupState('notification', '알림: 앱 빌드에서 사용 가능');
 	      return;
 	    }
-	    await setupNotifications(true);
-	    updateSetupChecklist();
+	    setSetupState('notification', '알림: 권한 확인 중');
+	    const result = await setupNotifications(true);
+	    if (result && result.ok) updateSetupChecklist();
+	    else setSetupState('notification', result && result.reason === 'permission-denied' ? '알림: 권한 필요' : '알림: 예약 실패');
 	  }
 
   // --- 리포트 공유 시스템 ---
@@ -1734,7 +2131,7 @@
   const senseiTd = $('stamp-sensei-td');
   if (senseiTd) {
     const stampEl = $('stamp-sensei');
-    const isStamped = localStorage.getItem('noa-sensei-stamped') === '1';
+    const isStamped = storage.getItem('noa-sensei-stamped') === '1';
     if (isStamped && stampEl) {
       stampEl.classList.remove('locked');
     }
@@ -1743,7 +2140,7 @@
       if (stampEl && stampEl.classList.contains('locked')) {
         stampEl.classList.remove('locked');
         stampEl.classList.add('stamping');
-        localStorage.setItem('noa-sensei-stamped', '1');
+        storage.setItem('noa-sensei-stamped', '1');
         
         // 햅틱 진동 피드백
         if (navigator.vibrate) navigator.vibrate([30, 50]);
@@ -1779,10 +2176,8 @@
 	  $('msg').textContent = state.steps > 0
 	    ? `오늘 ${state.steps.toLocaleString()}보까지 기록해 뒀어요.`
 	    : pickLine(noaLines.greeting);
-	  if (!localStorage.getItem('noa-setup-reviewed')) {
-	    setTimeout(openSetupModal, 700);
+	  if (!storage.getItem('noa-setup-reviewed')) {
+	    setTimeout(() => openSetupModal($('app-title')), 700);
 	  }
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  }
+  C.registerServiceWorker();
 })();

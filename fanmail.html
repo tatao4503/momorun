@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#12162f" />
 <title>모모런 - 팬레터 데모</title>
 <link rel="stylesheet" href="css/fanmail.css" />
@@ -10,9 +10,9 @@
 <body>
 <main class="mail-app">
   <header class="mail-header">
-    <a class="back-link" href="index.html" aria-label="풀버전으로 돌아가기">
+    <a class="back-link" href="fanmail.html?reset=1" aria-label="팬레터 데모 기록을 0보로 초기화">
       <span aria-hidden="true">‹</span>
-      풀버전
+      0보로 보기
     </a>
     <div class="status-pill">비공식 · 비상업 팬 데모</div>
   </header>
@@ -52,8 +52,8 @@
       <button id="toggle" class="primary-btn" type="button">기록 시작</button>
       <button id="sample" class="ghost-btn" type="button">샘플 기록 추가</button>
     </div>
-    <div class="sensor-line">
-      <span id="sensorDot" class="dot"></span>
+    <div class="sensor-line" role="status" aria-live="polite">
+      <span id="sensorDot" class="dot" aria-hidden="true"></span>
       <span id="sensorText">센서 대기 중</span>
     </div>
   </section>
@@ -105,7 +105,7 @@
   </section>
 </main>
 
-<div id="toast" class="toast hidden"></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
 <script src="js/core.js"></script>
 <script src="js/fanmail.js"></script>

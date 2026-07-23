@@ -15,6 +15,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   margin: 0;
   min-height: 100%;
@@ -69,6 +73,11 @@ button:active {
   transform: scale(0.98);
 }
 
+:where(button, a):focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 3px;
+}
+
 .mail-app {
   width: min(100%, 860px);
   min-height: 100vh;
@@ -88,7 +97,7 @@ button:active {
 
 .back-link,
 .status-pill {
-  min-height: 30px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -567,5 +576,14 @@ h1 {
   .notice-item {
     grid-template-columns: 1fr;
     gap: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

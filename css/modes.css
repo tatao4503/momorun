@@ -1,0 +1,237 @@
+:root {
+  --ink: #13243a;
+  --muted: #687b91;
+  --cyan: #64d6ea;
+  --cyan-deep: #278eae;
+  --lavender: #9482d1;
+  --paper: #f4fafc;
+  --navy: #152338;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--navy); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--ink);
+  background-color: var(--navy);
+  background-image: linear-gradient(rgba(17, 33, 53, 0.48), rgba(17, 33, 53, 0.88)), url("../noa-mobile.jpg");
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  letter-spacing: 0;
+}
+
+a { color: inherit; }
+:where(a):focus-visible {
+  outline: 3px solid #a9eff8;
+  outline-offset: 3px;
+}
+
+.mode-shell {
+  width: min(100%, 560px);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 22px) 18px calc(env(safe-area-inset-bottom, 0px) + 24px);
+}
+
+.mode-header {
+  padding: 18px 4px 22px;
+  color: #fff;
+}
+
+.mode-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.mode-kicker {
+  color: #a7edf6;
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.mode-header h1 {
+  margin: 3px 0 0;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.mode-header p {
+  margin: 18px 0 0;
+  color: rgba(235, 249, 255, 0.82);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.noa-halo {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+}
+.noa-halo span { position: absolute; display: block; }
+.halo-outer {
+  inset: 4px;
+  border: 3px solid #b9f4ff;
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(100, 214, 234, 0.9), inset 0 0 8px rgba(100, 214, 234, 0.42);
+}
+.halo-inner { inset: 14px; border: 2px solid #ecfdff; border-radius: 50%; }
+.halo-chip {
+  width: 8px;
+  height: 17px;
+  top: 15px;
+  border: 2px solid #c8f7ff;
+  background: #285d78;
+}
+.halo-chip.left { left: 0; border-radius: 5px 2px 2px 5px; }
+.halo-chip.right { right: 0; border-radius: 2px 5px 5px 2px; }
+
+.mode-list {
+  display: grid;
+  gap: 12px;
+}
+
+.mode-card {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  min-height: 190px;
+  overflow: hidden;
+  border: 1px solid rgba(198, 230, 238, 0.78);
+  border-radius: 8px;
+  background: rgba(247, 252, 253, 0.96);
+  box-shadow: 0 14px 35px rgba(3, 15, 29, 0.3);
+}
+
+.mode-card.is-current {
+  border-color: #9ce7f2;
+  box-shadow: 0 0 0 2px rgba(100, 214, 234, 0.42), 0 14px 35px rgba(3, 15, 29, 0.36);
+}
+
+.mode-art {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+}
+.mode-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(19, 36, 58, 0.02), rgba(19, 36, 58, 0.68));
+}
+.mode-art span {
+  position: absolute;
+  z-index: 1;
+  left: 12px;
+  bottom: 12px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+}
+.mode-schale .mode-art { background-image: url("../noa3-mobile.jpg"); }
+.mode-lite .mode-art { background-image: url("../noa1-mobile.jpg"); }
+.mode-life .mode-art { background-image: url("../noa-mobile.jpg"); }
+
+.mode-copy {
+  min-width: 0;
+  padding: 15px 14px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mode-title-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.mode-title-line span {
+  color: var(--cyan-deep);
+  font-size: 9px;
+  font-weight: 900;
+}
+.mode-title-line h2 {
+  margin: 2px 0 0;
+  font-size: 19px;
+  line-height: 1.2;
+}
+.mode-title-line b {
+  min-height: 20px;
+  color: #277e73;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.mode-copy > p {
+  margin: 8px 0 9px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mode-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.mode-tags span {
+  padding: 3px 6px;
+  border: 1px solid #cfdee5;
+  border-radius: 3px;
+  color: #536a82;
+  background: #edf5f7;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.mode-action {
+  min-height: 44px;
+  margin-top: auto;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 5px;
+  color: #fff;
+  background: var(--navy);
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+.mode-action svg { width: 17px; height: 17px; }
+.mode-lite .mode-action { background: #4f48b7; }
+.mode-life .mode-action { background: #287f9a; }
+
+.mode-footer {
+  padding: 20px 4px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  color: rgba(226, 244, 248, 0.72);
+  font-size: 10px;
+}
+.mode-footer a { font-weight: 800; text-underline-offset: 3px; }
+
+@media (min-width: 700px) {
+  body {
+    background-image: linear-gradient(rgba(17, 33, 53, 0.42), rgba(17, 33, 53, 0.86)), url("../noa-desktop.jpg");
+    background-position: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .mode-card { grid-template-columns: 78px minmax(0, 1fr); }
+  .mode-header h1 { font-size: 21px; }
+  .mode-copy { padding-inline: 11px; }
+  .mode-title-line h2 { font-size: 17px; }
+  .mode-footer { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}

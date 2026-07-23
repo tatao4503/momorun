@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>모모런 - 개인정보처리방침</title>
 <style>
   :root {
@@ -104,6 +104,11 @@
     background: rgba(125, 211, 252, 0.2);
     border-color: var(--blue-accent);
   }
+
+  .back-btn:focus-visible {
+    outline: 3px solid var(--blue-accent);
+    outline-offset: 3px;
+  }
 </style>
 </head>
 <body>
@@ -120,7 +125,7 @@
   <ul>
     <li><span class="highlight">동작 센서 및 HealthKit 걸음 수 데이터</span>: 실시간 걸음 수 측정, 주간 리포트 분석, 업적 달성 검증을 위해 사용되며 기기 밖으로 절대 전송되지 않습니다.</li>
     <li><span class="highlight">위치 정보 (선택)</span>: 현재 날씨와 모모톡의 상황별 대사를 연동하기 위해 임시 사용되며, 서버에 저장되지 않고 API 호출 후 즉시 파기됩니다.</li>
-    <li><span class="highlight">API Keys (Gemini, ElevenLabs)</span>: AI 대화 및 목소리 합성을 위해 사용자가 직접 설정 창에 입력한 키이며, 로컬 기기에만 보관되며 외부의 특정 중개 서버를 거치지 않고 직접 해당 API에 전송됩니다.</li>
+    <li><span class="highlight">API Keys (Gemini, ElevenLabs)</span>: AI 대화 및 선택형 외부 TTS 음성합성을 위해 사용자가 직접 설정 창에 입력한 키이며, 로컬 기기에만 보관되며 외부의 특정 중개 서버를 거치지 않고 직접 해당 API에 전송됩니다.</li>
   </ul>
 
   <h2>3. 개인정보의 보유 및 파기</h2>
@@ -132,7 +137,7 @@
   <h2>5. 문의 사항</h2>
   <p>개인정보 처리 및 보안 관련 의문점이 있으신 경우, 제작자 이메일(taeung) 혹은 공식 깃허브 저장소 이슈를 통해 언제든 연락해 주시기 바랍니다.</p>
 
-  <a href="index.html" class="back-btn">돌아가기</a>
+  <a href="modes.html" class="back-btn">버전 선택으로 돌아가기</a>
 </div>
 
 </body>

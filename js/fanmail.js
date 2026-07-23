@@ -1,6 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const C = window.NoaCore;
+  const storage = C.storage;
   const CIRC = C.CIRC;
   const STORAGE_PREFIX = 'noa-fanmail-';
   const GOAL = 8000;
@@ -16,6 +17,7 @@
     currentDateKey: todayKey(),
     sources: { motion: 0, sample: 0 },
   };
+  let storageWarned = false;
 
   const els = {
     steps: $('steps'),
@@ -43,7 +45,7 @@
 
   function readRecord(key) {
     try {
-      const raw = localStorage.getItem(key);
+      const raw = storage.getItem(key);
       if (!raw) return null;
       const record = JSON.parse(raw);
       return {
@@ -56,19 +58,26 @@
     }
   }
 
-  function writeRecord() {
-    localStorage.setItem(todayKey(), JSON.stringify({
+  function writeRecord(silent = false) {
+    const ok = C.safeSet(todayKey(), JSON.stringify({
       steps: state.steps,
       goal: state.goal,
       sources: normalizeSources(state.sources),
       updatedAt: new Date().toISOString(),
     }));
+    if (!ok && !storageWarned && !silent) {
+      storageWarned = true;
+      showToast('브라우저 저장이 막혀 이번 화면에서만 기록을 유지합니다.');
+    } else if (ok) {
+      storageWarned = false;
+    }
+    return ok;
   }
 
   function clearFanmailRecords() {
-    Object.keys(localStorage)
+    storage.keys()
       .filter(key => key.startsWith(STORAGE_PREFIX))
-      .forEach(key => localStorage.removeItem(key));
+      .forEach(key => storage.removeItem(key));
     state.steps = 0;
     state.goal = GOAL;
     state.sources = { motion: 0, sample: 0 };
@@ -288,8 +297,13 @@
     },
   };
 
-  window.addEventListener('beforeunload', writeRecord);
+  window.addEventListener('pagehide', () => writeRecord(true));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') writeRecord(true);
+  });
   const resetApplied = applyUrlCommands();
   load();
   if (resetApplied) showToast('팬레터 데모를 0보 상태로 정리했습니다.');
+  else if (!storage.persistent) showToast('브라우저 저장이 막혀 이번 화면에서만 기록을 유지합니다.');
+  C.registerServiceWorker();
 })();
