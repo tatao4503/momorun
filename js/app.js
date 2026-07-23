@@ -2,6 +2,7 @@
   const $ = id => document.getElementById(id);
   const C = window.NoaCore;
   const storage = C.storage;
+  const CHAR = window.MomoCharacter; // 캐릭터 데이터(대사·랭크·생일) — characters/noa.js
 
   function installDevErrorOverlay() {
     const params = new URLSearchParams(window.location.search);
@@ -226,11 +227,11 @@
   }
 
   function getAffectionLevel(totalSteps) {
-    if (totalSteps >= 500000) return { level: 5, title: '선생님 전속 서기' };
-    if (totalSteps >= 100000) return { level: 4, title: '발걸음의 동반자' };
-    if (totalSteps >= 50000) return { level: 3, title: '믿음직한 기록자' };
-    if (totalSteps >= 10000) return { level: 2, title: '성실한 관찰자' };
-    return { level: 1, title: '기록의 시작' };
+    for (const r of CHAR.ranks) {
+      if (totalSteps >= r.min) return { level: r.level, title: r.title };
+    }
+    const last = CHAR.ranks[CHAR.ranks.length - 1];
+    return { level: last.level, title: last.title };
   }
 
 	  let chartInstance = null;
@@ -322,7 +323,7 @@
 		    state.sources = saved ? normalizeSources(saved.sources) : makeEmptySources();
 		    state.lastSource = saved ? saved.lastSource || '' : '';
 	    if (state.steps >= state.goal) state.goalReachedToday = true;
-	    if (state.steps >= 4130) state.easterEggShown = true;
+	    if (state.steps >= CHAR.birthday.steps) state.easterEggShown = true;
 	    $('goal').value = state.goal;
 	    // 첫 로드 시점엔 현재 레벨로 동기화(잘못된 레벨업 연출 방지)
 	    lastAffectionLevel = getAffectionLevel(getLifetimeSteps()).level;
@@ -390,45 +391,20 @@
   // ---- UI ----
   // --- 시간대 처리 및 대사 ---
   const hour = new Date().getHours();
-  let timeClass = 'time-morning';
-  let greetingLines = [];
-  if (hour >= 5 && hour < 12) {
-    timeClass = 'time-morning';
-    greetingLines = ["좋은 아침이에요, 선생님. 오늘도 힘차게 걸어볼까요?", "아침 기록을 시작할 준비가 됐어요."];
-  } else if (hour >= 12 && hour < 18) {
-    timeClass = 'time-afternoon';
-    greetingLines = ["점심은 드셨나요? 나른한 오후에도 기록은 계속됩니다.", "기록할 준비됐어요. 오늘도 시작할까요, 선생님?"];
-  } else {
-    timeClass = 'time-night';
-    greetingLines = ["밤이 늦었네요. 기록은 제게 맡기고 쉬셔도 좋아요.", "오늘 하루도 수고 많으셨어요, 선생님."];
-  }
+  let timeClass = 'time-morning', timeKey = 'morning';
+  if (hour >= 5 && hour < 12) { timeClass = 'time-morning'; timeKey = 'morning'; }
+  else if (hour >= 12 && hour < 18) { timeClass = 'time-afternoon'; timeKey = 'afternoon'; }
+  else { timeClass = 'time-night'; timeKey = 'night'; }
   document.body.classList.add(timeClass);
+  const greetingLines = CHAR.lines.greetingByTime[timeKey];
 
   const noaLines = {
     greeting: greetingLines,
-    start: [
-      "측정 시작할게요. 기록은 제게 맡기세요.",
-      "한 걸음도 놓치지 않고 적어 둘게요.",
-      "기록대로, 완벽하게. 가볼까요, 선생님?",
-    ],
-    stop: [
-      "여기까지 기록해 뒀어요. 언제든 이어서 하시면 돼요.",
-      "잠깐 쉬어가도 괜찮아요. 기록은 그대로 남아 있어요.",
-    ],
-    memorial: [
-      "선생님, 그렇게 빤히 바라보시면 기록하는 손이 멈춰버린답니다.",
-      "서기인 저도 모르게, 선생님의 얼굴을 넋 놓고 바라볼 뻔했어요. 이건 비밀 기록이랍니다?",
-      "오늘 하루도 고생 많으셨어요. 지금만큼은 일도, 기록도 다 잊고 제 곁에서 쉬어가시는 건 어떨까요?",
-      "선생님과 함께 걷는 이 길을 매 걸음마다 제 마음속 깊이 적어두고 있어요.",
-      "선생님의 손길... 참 따뜻하네요. 앞으로도 계속 곁에서 적어두게 해주세요."
-    ]
+    start: CHAR.lines.start,
+    stop: CHAR.lines.stop,
+    memorial: CHAR.lines.memorial,
   };
-  const milestones = [
-    { p: 0.25, t: "좋은 출발이에요, 선생님. 순조롭게 적히고 있어요." },
-    { p: 0.50, t: "절반 지점이에요. 기록은 정확하게 남기고 있어요." },
-    { p: 0.75, t: "조금만 더예요. 끝까지 함께 기록할게요." },
-    { p: 1.00, t: "수고하셨습니다, 선생님." },
-  ];
+  const milestones = CHAR.lines.milestones;
 		  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 	  function pickLine(arr) {
 	    if (!Array.isArray(arr) || arr.length === 0) return '';
@@ -953,10 +929,10 @@
       }
     }
 
-    if (state.steps >= 4130 && !state.easterEggShown) {
+    if (state.steps >= CHAR.birthday.steps && !state.easterEggShown) {
       state.easterEggShown = true;
-      if (state.steps === 4130) {
-        setTimeout(() => showMomotalk("비밀 기록 해금! 4월 13일, 오늘은 제 생일이네요. 4,130보를 정확히 달성해주시다니... 선생님의 섬세한 기록, 잊지 않을게요!"), 500);
+      if (state.steps === CHAR.birthday.steps) {
+        setTimeout(() => showMomotalk(CHAR.birthday.message), 500);
       }
     }
 
