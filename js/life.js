@@ -3,6 +3,7 @@
   const C = window.NoaCore;
   const storage = C.storage;
   const CIRC = C.CIRC;
+  const CHAR = window.MomoCharacter; // 캐릭터 대사 — characters/noa.js
   const HEALTH_KEY = 'noa-health-sync-enabled';
   const NOTIFICATION_KEY = 'noa-notifications-enabled';
   const TTS_KEY = 'noa-manbogi-voice';
@@ -139,22 +140,22 @@
   }
 
   function memoText() {
+    const m = CHAR.lines.life.memo;
     const ratio = state.steps / Math.max(100, state.goal);
     const remain = Math.max(0, state.goal - state.steps);
-    if (ratio >= 1) return '오늘 목표를 달성했습니다. 기록은 정확하게 정리해 둘게요.';
-    if (state.steps > 0 && remain <= 1500) return '마감까지 조금 남았습니다. 짧은 산책이면 충분해요.';
-    if (state.steps >= state.goal * 0.5) return '절반을 넘었습니다. 무리하지 않고 이 흐름을 이어가요.';
-    if (state.steps > 0) return '오늘 기록이 차곡차곡 쌓이고 있어요.';
-    return state.healthEnabled
-      ? '건강 앱에서 오늘 걸음을 확인해 볼까요?'
-      : '건강 앱을 연결하면 오늘 걸음을 자동으로 정리합니다.';
+    if (ratio >= 1) return m.done;
+    if (state.steps > 0 && remain <= 1500) return m.almost;
+    if (state.steps >= state.goal * 0.5) return m.half;
+    if (state.steps > 0) return m.progress;
+    return state.healthEnabled ? m.healthOn : m.healthOff;
   }
 
   function greetingText() {
+    const g = CHAR.lines.life.greeting;
     const hour = new Date().getHours();
-    if (hour < 11) return '좋은 아침이에요. 오늘 기록을 시작할까요?';
-    if (hour < 18) return '오늘 걸음도 빠짐없이 정리하고 있어요.';
-    return '오늘 하루 기록을 함께 확인해 볼까요?';
+    if (hour < 11) return g.morning;
+    if (hour < 18) return g.afternoon;
+    return g.night;
   }
 
   function render() {
@@ -313,13 +314,13 @@
             {
               id: 1,
               title: '모모런',
-              body: '좋은 아침이에요. 오늘 기록을 시작할까요?',
+              body: CHAR.notifications.life.morning,
               schedule: { on: { hour: 8, minute: 0 } },
             },
             {
               id: 2,
               title: '모모런',
-              body: '오늘 하루도 수고 많으셨어요. 기록을 확인해 볼까요?',
+              body: CHAR.notifications.life.evening,
               schedule: { on: { hour: 20, minute: 0 } },
             },
           ],

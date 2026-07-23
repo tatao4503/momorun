@@ -3,6 +3,7 @@
   const C = window.NoaCore;
   const storage = C.storage;
   const CIRC = C.CIRC;
+  const CHAR = window.MomoCharacter; // 캐릭터 대사 — characters/noa.js
 
   const state = {
     steps: 0,
@@ -108,10 +109,11 @@
   }
 
   function memoText(ratio, remain) {
-    if (ratio >= 1) return '오늘 목표 달성. 기록은 조용히 정리해둘게요.';
-    if (state.steps > 0 && remain <= 1500) return '마감까지 조금 남았습니다. 짧은 산책이면 충분해요.';
-    if (state.steps > 0) return '오늘 기록이 남았습니다. 무리하지 않고 이어가면 됩니다.';
-    return '기록 시작을 누르면 오늘 걸음을 조용히 정리합니다.';
+    const m = CHAR.lines.lite.memo;
+    if (ratio >= 1) return m.done;
+    if (state.steps > 0 && remain <= 1500) return m.almost;
+    if (state.steps > 0) return m.progress;
+    return m.idle;
   }
 
   function renderWeek(records) {
@@ -205,7 +207,7 @@
     setSensor(true, '측정 중');
     els.toggle.textContent = '정지';
     els.toggle.classList.add('stop');
-    showToast("모모톡: 기록을 시작합니다.");
+    showToast(CHAR.lines.lite.start);
   }
 
   function stop() {

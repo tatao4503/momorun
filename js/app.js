@@ -1938,14 +1938,14 @@
           notifications: [
             {
               title: "모모톡 - 우시오 노아",
-              body: "선생님, 좋은 아침이에요. 오늘 기록을 시작할까요?",
+              body: CHAR.notifications.schale.morning,
               id: 1,
               schedule: { on: { hour: 8, minute: 0 } },
               smallIcon: "ic_stat_name"
             },
             {
               title: "모모톡 - 우시오 노아",
-              body: "선생님, 오늘 하루도 수고 많으셨어요. 기록을 한 번 확인해보실래요?",
+              body: CHAR.notifications.schale.evening,
               id: 2,
               schedule: { on: { hour: 20, minute: 0 } },
               smallIcon: "ic_stat_name"
