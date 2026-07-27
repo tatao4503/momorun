@@ -54,6 +54,7 @@
   installDevErrorOverlay();
 
   const CIRC = C.CIRC;
+  const LAST_VISIT_KEY = 'noa-schale-last-visit-date';
 
   const state = {
     steps: 0,
@@ -140,7 +141,10 @@
 
   // ---- daily persistence ----
   // 공통 저장/날짜 헬퍼는 core.js(NoaCore)에서 가져온다.
-  const { STORAGE_PREFIX, pad, dateKey, legacyDateKey, todayKey, fallbackGoal, parseRecord } = C;
+  const {
+    STORAGE_PREFIX, pad, dateKey, legacyDateKey, todayKey, localDateStamp,
+    daysBetweenDateStamps, fallbackGoal, parseRecord,
+  } = C;
   const SOURCE_LABELS = {
     sensor: '동작 센서',
     health: 'HealthKit',
@@ -416,6 +420,13 @@
 	    storage.setItem('noa-recent-lines', JSON.stringify(recent));
 	    return line;
 	  }
+  function takeReturnGreeting() {
+    const today = localDateStamp();
+    const previousVisit = storage.getItem(LAST_VISIT_KEY);
+    storage.setItem(LAST_VISIT_KEY, today);
+    if (daysBetweenDateStamps(previousVisit, today) < 2) return '';
+    return pickLine(CHAR.lines.returnAfterBreak);
+  }
   const milestoneIndexFor = ratio => {
     let idx = -1;
     milestones.forEach((m, i) => { if (ratio >= m.p) idx = i; });
@@ -2149,10 +2160,16 @@
 	  initBgmAvailability();
 	  checkLocalVoicePack();
 	  updateSetupChecklist();
-	  $('msg').textContent = state.steps > 0
+    const setupReviewed = storage.getItem('noa-setup-reviewed') === '1';
+    const returnGreeting = takeReturnGreeting();
+    const activeReturnGreeting = setupReviewed ? returnGreeting : '';
+	  $('msg').textContent = activeReturnGreeting || (state.steps > 0
 	    ? `오늘 ${state.steps.toLocaleString()}보까지 기록해 뒀어요.`
-	    : pickLine(noaLines.greeting);
-	  if (!storage.getItem('noa-setup-reviewed')) {
+	    : pickLine(noaLines.greeting));
+    if (activeReturnGreeting) {
+      setTimeout(() => showMomotalk(activeReturnGreeting), 700);
+    }
+	  if (!setupReviewed) {
 	    setTimeout(() => openSetupModal($('app-title')), 700);
 	  }
   C.registerServiceWorker();

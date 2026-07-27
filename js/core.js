@@ -133,6 +133,32 @@
   const dateKey = d => `${STORAGE_PREFIX}${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const legacyDateKey = d => `${STORAGE_PREFIX}${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
   const todayKey = () => dateKey(new Date());
+  const localDateStamp = (date = new Date()) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  function dayNumberForDateStamp(stamp) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(stamp || ''));
+    if (!match) return null;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const utc = Date.UTC(year, month - 1, day);
+    const parsed = new Date(utc);
+    if (
+      parsed.getUTCFullYear() !== year ||
+      parsed.getUTCMonth() !== month - 1 ||
+      parsed.getUTCDate() !== day
+    ) return null;
+    return Math.floor(utc / DAY_MS);
+  }
+
+  function daysBetweenDateStamps(previous, current = localDateStamp()) {
+    const previousDay = dayNumberForDateStamp(previous);
+    const currentDay = dayNumberForDateStamp(current);
+    if (previousDay === null || currentDay === null || currentDay <= previousDay) return 0;
+    return currentDay - previousDay;
+  }
+
   const fallbackGoal = () => Math.max(100, +(storage.getItem('noa-manbogi-goal') || 10000) || 10000);
 
   // 안전 저장: 사파리 사생활 모드/용량 초과 등으로 setItem이 throw해도 앱이 죽지 않게.
@@ -338,7 +364,8 @@
   window.NoaCore = {
     STORAGE_PREFIX,
     CIRC: 2 * Math.PI * 106, // ≈ 666
-    pad, dateKey, legacyDateKey, todayKey, fallbackGoal, parseRecord, safeSet, storage,
+    pad, dateKey, legacyDateKey, todayKey, localDateStamp, daysBetweenDateStamps,
+    fallbackGoal, parseRecord, safeSet, storage,
     isNativePlatform, getNativePlugin, createStepDetector, syncHealthKit,
     initBackgroundTasks, setupAppLifecycle, registerServiceWorker,
   };

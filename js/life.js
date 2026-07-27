@@ -39,8 +39,12 @@
     healthStatus: $('healthStatus'),
     speakMemo: $('speakMemo'),
     weekTotal: $('weekTotal'),
+    weekRange: $('weekRange'),
+    weekMemo: $('weekMemo'),
     weekAverage: $('weekAverage'),
     weekGoals: $('weekGoals'),
+    weekBest: $('weekBest'),
+    speakWeekMemo: $('speakWeekMemo'),
     weekRecords: $('weekRecords'),
     goalInput: $('goalInput'),
     saveGoal: $('saveGoal'),
@@ -200,12 +204,31 @@
     return 'HealthKit은 선택한 경우에만 걸음 수를 읽습니다.';
   }
 
+  function weeklyMemoText({ total, completed, activeDays }) {
+    const weekly = CHAR.lines.life.weekly;
+    if (completed >= 5) return weekly.excellent;
+    if (activeDays >= 4) return weekly.steady;
+    if (total > 0) return weekly.started;
+    return weekly.empty;
+  }
+
   function renderWeek(records) {
     const total = records.reduce((sum, record) => sum + record.steps, 0);
     const completed = records.filter(record => record.steps >= Math.max(100, record.goal)).length;
+    const activeDays = records.filter(record => record.steps > 0).length;
+    const best = records.reduce((current, record) => record.steps > current.steps ? record : current, records[0]);
+    const rangeStart = records[0].date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+    const rangeEnd = records[records.length - 1].date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+    const bestDay = best.steps > 0
+      ? best.date.toLocaleDateString('ko-KR', { weekday: 'short' })
+      : '';
     els.weekTotal.textContent = formatSteps(total);
+    els.weekRange.textContent = `${rangeStart} - ${rangeEnd}`;
+    els.weekMemo.textContent = weeklyMemoText({ total, completed, activeDays });
     els.weekAverage.textContent = formatSteps(Math.round(total / records.length));
     els.weekGoals.textContent = `${completed}일`;
+    els.weekBest.textContent = best.steps > 0 ? `${bestDay} · ${formatSteps(best.steps)}` : '기록 없음';
+    els.speakWeekMemo.disabled = !state.ttsEnabled;
     els.weekRecords.textContent = '';
 
     records.forEach((record, index) => {
@@ -422,6 +445,7 @@
   els.quickSync.addEventListener('click', () => syncHealth({ requestAuthorization: !state.healthEnabled }));
   els.sync.addEventListener('click', () => syncHealth({ requestAuthorization: !state.healthEnabled }));
   els.speakMemo.addEventListener('click', () => speak(els.memo.textContent));
+  els.speakWeekMemo.addEventListener('click', () => speak(els.weekMemo.textContent));
   els.notificationToggle.addEventListener('click', () => setNotifications(!state.notificationsEnabled));
   els.ttsToggle.addEventListener('click', () => {
     state.ttsEnabled = !state.ttsEnabled;

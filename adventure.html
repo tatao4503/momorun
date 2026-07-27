@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko" data-mode="schale">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#101b2d" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="샬레 순찰" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>모모런 - 샬레 순찰 작전</title>
+<script src="js/mode-router.js"></script>
+<link rel="stylesheet" href="css/adventure.css" />
+</head>
+<body>
+<div class="adventure-shell">
+  <header class="adventure-header">
+    <a class="icon-command" href="index.html?mode=schale" aria-label="샬레 버전으로 돌아가기" title="샬레 버전으로 돌아가기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+    </a>
+    <div class="adventure-brand">
+      <span>SCHALE PATROL · 2D</span>
+      <h1>샬레 순찰 작전</h1>
+    </div>
+    <button id="refreshPatrol" class="icon-command" type="button" aria-label="오늘 걸음 새로고침" title="오늘 걸음 새로고침">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6v5h-5"></path><path d="M4 18v-5h5"></path><path d="M6.1 9a7 7 0 0 1 11.2-2.6L20 9"></path><path d="M17.9 15a7 7 0 0 1-11.2 2.6L4 15"></path></svg>
+    </button>
+  </header>
+
+  <main>
+    <section class="patrol-summary" aria-label="오늘 순찰 진행">
+      <div>
+        <span>오늘 기록</span>
+        <strong id="patrolSteps">0보</strong>
+      </div>
+      <div>
+        <span>순찰 진행</span>
+        <strong id="patrolPercent">0%</strong>
+      </div>
+      <div>
+        <span>확인 구역</span>
+        <strong id="patrolCount">0 / 5</strong>
+      </div>
+    </section>
+
+    <section class="map-stage" id="mapStage" data-scene="0" aria-labelledby="mapTitle">
+      <h2 id="mapTitle" class="visually-hidden">오늘의 키보토스 순찰 경로</h2>
+      <svg class="city-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <rect class="map-ground" x="0" y="0" width="100" height="100"></rect>
+        <path class="waterway" d="M-8 20 C18 32 13 48 40 55 S77 72 108 64"></path>
+        <path class="district-road road-west" d="M4 83 L28 67 L60 77"></path>
+        <path class="district-road road-east" d="M58 78 L86 54 L65 27 L28 15"></path>
+        <path class="district-road road-cross" d="M9 42 L38 34 L67 44 L96 32"></path>
+        <g class="city-blocks">
+          <path d="M4 8h18v17H4z"></path>
+          <path d="M31 5h21v22H31z"></path>
+          <path d="M60 6h15v19H60z"></path>
+          <path d="M80 8h16v28H80z"></path>
+          <path d="M4 48h20v20H4z"></path>
+          <path d="M31 41h19v20H31z"></path>
+          <path d="M71 65h24v19H71z"></path>
+          <path d="M8 76h20v18H8z"></path>
+          <path d="M39 82h20v13H39z"></path>
+        </g>
+        <g class="city-details">
+          <path d="M8 12h10M8 17h10M35 10h13M35 16h13M64 12h7M84 13h8M84 19h8"></path>
+          <path d="M8 53h12M8 59h12M35 46h11M35 52h11M75 70h16M75 76h16"></path>
+        </g>
+        <path class="patrol-route-shadow" d="M11 86 L26 70 L59 78 L84 55 L65 28 L29 16"></path>
+        <path class="patrol-route" d="M11 86 L26 70 L59 78 L84 55 L65 28 L29 16"></path>
+      </svg>
+      <div id="checkpointLayer" class="checkpoint-layer"></div>
+      <div id="patrolMarker" class="patrol-marker" aria-hidden="true">
+        <span class="marker-beam"></span>
+        <img src="icon-192.png" alt="" />
+      </div>
+      <div class="map-label label-west">SCHALE</div>
+      <div class="map-label label-east">MILLENNIUM</div>
+    </section>
+
+    <section class="patrol-briefing" aria-live="polite">
+      <img src="icon-192.png" alt="우시오 노아" />
+      <div class="briefing-copy">
+        <span id="sceneLabel">순찰 준비</span>
+        <p id="patrolDialogue">오늘 기록을 확인하고 있습니다.</p>
+        <div class="next-progress" aria-label="다음 체크포인트 진행률">
+          <span id="nextTarget">첫 구역 확인 전</span>
+          <div class="next-track"><span id="nextFill"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <ol id="checkpointList" class="checkpoint-list" aria-label="오늘의 체크포인트"></ol>
+
+    <section id="memoryArchive" class="memory-archive" aria-labelledby="memoryArchiveTitle">
+      <header class="memory-archive-header">
+        <div>
+          <span>NOA PATROL MEMORIES</span>
+          <h2 id="memoryArchiveTitle">순찰 추억 보관함</h2>
+        </div>
+        <strong id="memoryCount">0 / 5</strong>
+      </header>
+      <ol id="memoryList" class="memory-list" aria-label="보관된 순찰 추억 카드"></ol>
+    </section>
+  </main>
+</div>
+
+<div id="patrolToast" class="patrol-toast" role="status" aria-live="polite" hidden></div>
+
+<div id="memoryModal" class="memory-modal" role="dialog" aria-modal="true" aria-labelledby="memoryModalTitle" aria-hidden="true" hidden>
+  <button id="memoryClose" class="memory-modal-close" type="button" aria-label="추억 카드 닫기" title="추억 카드 닫기">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+  </button>
+  <article id="memoryDetail" class="memory-detail" data-memory-index="0">
+    <div class="memory-detail-scene">
+      <span id="memoryModalNumber" class="memory-detail-number">MEMORY 01</span>
+      <div class="memory-detail-portrait">
+        <span aria-hidden="true"></span>
+        <img src="icon-192.png" alt="우시오 노아" />
+      </div>
+      <span id="memoryModalLocation" class="memory-detail-location">샬레 정문</span>
+    </div>
+    <div class="memory-detail-copy">
+      <span>NOA'S PATROL LOG</span>
+      <h2 id="memoryModalTitle">첫 페이지의 출발선</h2>
+      <p id="memoryModalNote"></p>
+      <div class="memory-detail-stamp">
+        <span>FIRST ARCHIVED</span>
+        <strong id="memoryModalStamp"></strong>
+      </div>
+    </div>
+  </article>
+</div>
+
+<script src="js/core.js"></script>
+<script src="characters/noa.js"></script>
+<script src="js/adventure.js"></script>
+</body>
+</html>

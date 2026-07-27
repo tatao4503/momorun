@@ -168,6 +168,11 @@
 	    border-color: rgba(125,211,252,0.42);
 	    background: rgba(30, 84, 112, 0.46);
 	  }
+	  .patrol-link {
+	    color: #dffff0;
+	    border-color: rgba(127,240,178,0.42);
+	    background: rgba(31, 107, 83, 0.42);
+	  }
 	  .dev-link {
 	    min-height: 28px;
 	    padding: 4px;

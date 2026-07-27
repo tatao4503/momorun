@@ -10,11 +10,11 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <title>모모런 - 샬레 버전</title>
-<script src="js/mode-router.js"></script>
-<script src="js/confetti.browser.min.js"></script>
-<script src="js/chart.js"></script>
-<script src="js/html2canvas.min.js"></script>
-<link rel="stylesheet" href="css/style.css" />
+<script src="js/mode-router.js?v=52"></script>
+<script src="js/confetti.browser.min.js?v=52"></script>
+<script src="js/chart.js?v=52"></script>
+<script src="js/html2canvas.min.js?v=52"></script>
+<link rel="stylesheet" href="css/style.css?v=52" />
 </head>
 <body>
 <div class="app">
@@ -35,6 +35,10 @@
       <a href="modes.html" class="toolbar-chip toolbar-link mode-switch-link" aria-label="모모런 버전 선택">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
         SCHALE · FULL
+      </a>
+      <a href="adventure.html?mode=schale" class="toolbar-chip toolbar-link patrol-link" aria-label="샬레 순찰 지도">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path></svg>
+        순찰
       </a>
       <button id="dev-btn" class="dev-link" type="button">[DEV]</button>
       <button id="weather-btn" class="toolbar-chip weather-chip" type="button" aria-label="현재 위치 날씨 불러오기">
@@ -444,8 +448,8 @@
 
 <div id="hide-ui-overlay" aria-hidden="true"></div>
 
-<script src="js/core.js"></script>
-<script src="characters/noa.js"></script>
-<script src="js/app.js"></script>
+<script src="js/core.js?v=52"></script>
+<script src="characters/noa.js?v=52"></script>
+<script src="js/app.js?v=52"></script>
 </body>
 </html>

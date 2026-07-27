@@ -10,6 +10,7 @@
     goal: 10000,
     running: false,
     currentDateKey: null,
+    shownReaction: -1,
     sources: { sensor: 0, health: 0, test: 0, dev: 0 },
     lastSource: ''
   };
@@ -80,6 +81,7 @@
       state.sources.sensor = state.steps;
       state.lastSource = 'sensor';
     }
+    state.shownReaction = reactionIndexFor(state.steps / Math.max(100, state.goal));
     applyPurchasedItems();
     render();
   }
@@ -106,6 +108,22 @@
 
   function formatSteps(n) {
     return `${Math.max(0, Math.round(+n || 0)).toLocaleString()}보`;
+  }
+
+  const liteReactions = CHAR.lines.lite.reactions;
+  function reactionIndexFor(ratio) {
+    let index = -1;
+    liteReactions.forEach((reaction, i) => {
+      if (ratio >= reaction.p) index = i;
+    });
+    return index;
+  }
+
+  function takeLiteReaction() {
+    const index = reactionIndexFor(state.steps / Math.max(100, state.goal));
+    if (index <= state.shownReaction) return '';
+    state.shownReaction = index;
+    return liteReactions[index].t;
   }
 
   function memoText(ratio, remain) {
@@ -159,6 +177,7 @@
     if (state.currentDateKey && state.currentDateKey !== nowKey) {
       state.currentDateKey = nowKey;
       state.steps = 0;
+      state.shownReaction = -1;
       state.sources = emptySources();
       state.lastSource = '';
     }
@@ -169,7 +188,10 @@
     state.sources[safeSource] += add;
     state.lastSource = safeSource;
     render();
+    const reaction = takeLiteReaction();
+    if (reaction) showToast(reaction);
     save();
+    return reaction;
   }
 
   // --- Step Detection (공유 코어 감지기) ---
@@ -225,9 +247,9 @@
 
   if (els.sample) {
     els.sample.onclick = () => {
-      addSteps(500, 'test');
+      const reaction = addSteps(500, 'test');
       pulse();
-      showToast('샘플 기록 500보를 추가했습니다.');
+      if (!reaction) showToast('샘플 기록 500보를 추가했습니다.');
     };
   }
 

@@ -209,6 +209,31 @@ h1 {
   text-shadow: 0 2px 10px rgba(0,0,0,0.45);
 }
 
+.field-note {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 12px 4px;
+  border-top: 1px solid rgba(125,211,252,0.28);
+  border-bottom: 1px solid rgba(125,211,252,0.28);
+  background: rgba(7,10,26,0.18);
+}
+
+.field-note span {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.field-note p {
+  margin: 0;
+  color: #f1f5ff;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 750;
+}
+
 .tracker-panel,
 .brief-card,
 .week-panel,
@@ -545,13 +570,14 @@ h1 {
 
   .mail-header,
   .hero,
+  .field-note,
   .notice-panel {
     grid-column: 1 / -1;
   }
 
   .hero {
-    min-height: 34vh;
-    padding-top: 70px;
+    min-height: 25vh;
+    padding-top: 42px;
   }
 
   .brief-grid {
@@ -571,6 +597,11 @@ h1 {
   .status-pill {
     font-size: 10px;
     padding-inline: 9px;
+  }
+
+  .field-note {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 
   .notice-item {

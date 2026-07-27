@@ -10,8 +10,8 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <title>모모런 - 일상 버전</title>
-<script src="js/mode-router.js"></script>
-<link rel="stylesheet" href="css/life.css" />
+<script src="js/mode-router.js?v=49"></script>
+<link rel="stylesheet" href="css/life.css?v=49" />
 </head>
 <body>
 <div class="life-shell">
@@ -110,10 +110,27 @@
         </div>
         <strong id="weekTotal">0보</strong>
       </div>
-      <div class="week-summary" aria-label="최근 7일 요약">
-        <div><span>하루 평균</span><strong id="weekAverage">0보</strong></div>
-        <div><span>목표 달성</span><strong id="weekGoals">0일</strong></div>
-      </div>
+      <article class="noa-week-card" aria-labelledby="weekCardTitle">
+        <div class="week-card-top">
+          <div>
+            <span>NOA WEEKLY NOTE</span>
+            <h3 id="weekCardTitle">노아의 주간 기록</h3>
+          </div>
+          <time id="weekRange">최근 7일</time>
+        </div>
+        <div class="week-note">
+          <img src="icon-192.png" alt="우시오 노아" />
+          <p id="weekMemo">이번 주 기록을 차분히 정리하고 있어요.</p>
+          <button id="speakWeekMemo" class="memo-speak week-memo-speak" type="button" aria-label="주간 메모를 TTS로 듣기" title="주간 메모를 TTS로 듣기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M19 5a10 10 0 0 1 0 14"></path></svg>
+          </button>
+        </div>
+        <div class="week-card-metrics" aria-label="최근 7일 핵심 기록">
+          <div><span>하루 평균</span><strong id="weekAverage">0보</strong></div>
+          <div><span>목표 달성</span><strong id="weekGoals">0일</strong></div>
+          <div class="week-best"><span>가장 많이 걸은 날</span><strong id="weekBest">기록 없음</strong></div>
+        </div>
+      </article>
       <div id="weekRecords" class="week-records"></div>
     </section>
 
@@ -179,8 +196,8 @@
 
 <div id="lifeToast" class="life-toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/core.js"></script>
-<script src="characters/noa.js"></script>
-<script src="js/life.js"></script>
+<script src="js/core.js?v=49"></script>
+<script src="characters/noa.js?v=49"></script>
+<script src="js/life.js?v=49"></script>
 </body>
 </html>
