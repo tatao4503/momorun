@@ -59,6 +59,7 @@
       showToast('기록 저장 실패 — 사생활 모드인지 확인해 주세요.');
     } else if (ok) {
       storageWarned = false;
+      C.syncWidgetSnapshot({ steps: state.steps, goal: state.goal });
     }
   }
   function save() {
@@ -256,9 +257,11 @@
   // --- Background Theme (Sync with Full Version) ---
   function applyPurchasedItems() {
     const equipped = storage.getItem('noa-equipped-theme');
-    if (equipped) {
-      document.body.classList.add(equipped.replace('_', '-'));
-    }
+    const variants = (CHAR.theme && CHAR.theme.backgrounds && CHAR.theme.backgrounds.variants) || [];
+    const themeClasses = variants.map(theme => theme.className).filter(Boolean);
+    document.body.classList.remove(...themeClasses);
+    const selected = variants.find(theme => theme.id === equipped);
+    if (selected && selected.className) document.body.classList.add(selected.className);
   }
 
   // --- Lite Toast ---
@@ -274,5 +277,6 @@
   }
 
   load();
+  C.syncWidgetSnapshot({ steps: state.steps, goal: state.goal });
   C.registerServiceWorker();
 })();

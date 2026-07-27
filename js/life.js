@@ -104,6 +104,7 @@
       showToast('기록을 영구 저장하지 못했습니다. 저장 공간 설정을 확인해 주세요.');
     } else if (ok) {
       storageWarned = false;
+      C.syncWidgetSnapshot({ steps: state.steps, goal: state.goal });
     }
   }
 
@@ -471,6 +472,7 @@
   });
 
   load();
+  C.syncWidgetSnapshot({ steps: state.steps, goal: state.goal });
   C.setupAppLifecycle(() => syncHealth({ announce: false }));
   if (state.healthEnabled) {
     syncHealth({ announce: false });

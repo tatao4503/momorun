@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-mode="lite">
+<html lang="ko" data-mode="lite" data-theme-surface="lite">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -17,10 +17,10 @@
 <div class="lite-app">
   <header>
     <div class="brand-lite">
-      <img src="icon-192.png" alt="우시오 노아">
+      <img src="icon-192.png" alt="우시오 노아" data-character-avatar>
       <div>
-        <h1>모모톡 버전</h1>
-        <small>USHIO NOA · LITE</small>
+        <h1 data-character-ui="liteTitle">모모톡 버전</h1>
+        <small data-character-template="{label} · LITE">NOA · LITE</small>
       </div>
     </div>
     <a href="modes.html" class="switch-btn" aria-label="모모런 버전 선택">
@@ -71,11 +71,16 @@
 <div id="toast" class="lite-toast hidden" role="status" aria-live="polite"></div>
 
 <footer class="lite-footer">
-  본 앱은 비공식 팬 게임입니다. | <a href="privacy.html">개인정보처리방침</a>
+  <span data-character-ui="liteFooter">본 앱은 비공식 팬 게임입니다.</span> | <a href="privacy.html">개인정보처리방침</a>
 </footer>
 
 <script src="js/core.js?v=50"></script>
 <script src="characters/noa.js?v=50"></script>
+<!-- WEB_ORIGINAL_SAMPLE_START -->
+<script src="original/lumi/character.js"></script>
+<!-- WEB_ORIGINAL_SAMPLE_END -->
+<script src="js/character-loader.js"></script>
+<script src="js/character-theme.js"></script>
 <script src="js/lite.js?v=50"></script>
 </body>
 </html>

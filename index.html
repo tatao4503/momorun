@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-mode="schale">
+<html lang="ko" data-mode="schale" data-theme-surface="schale">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -28,7 +28,7 @@
 	      </div>
       <div>
         <h1 id="app-title" tabindex="-1">샬레 버전</h1>
-        <small>NOA WALKING LOG · FULL</small>
+        <small data-character-template="{label} WALKING LOG · FULL">NOA WALKING LOG · FULL</small>
       </div>
     </div>
     <div class="toolbar" aria-label="상단 빠른 메뉴">
@@ -276,8 +276,8 @@
 	  <!-- 모모톡 UI -->
   <div id="momotalk-toast" class="momotalk-toast hidden" role="status" aria-live="polite">
     <div class="momotalk-header">
-      <img src="icon-192.png" alt="Noa" class="momotalk-avatar">
-      <div class="momotalk-title">모모톡 - 우시오 노아</div>
+      <img src="icon-192.png" alt="우시오 노아" class="momotalk-avatar" data-character-avatar>
+      <div class="momotalk-title" data-character-template="모모톡 - {name}">모모톡 - 우시오 노아</div>
       <button class="momotalk-close" id="momotalk-close" type="button" aria-label="모모톡 알림 닫기">×</button>
     </div>
     <div class="momotalk-body">
@@ -346,14 +346,15 @@
     <div class="modal-content modal-content-chat">
       <div class="modal-header momotalk-modal-header">
         <h2 class="momotalk-modal-title" id="momotalk-modal-title">
-          <img src="icon-192.png" width="24" height="24" class="momotalk-modal-icon" alt=""> 모모톡 - 우시오 노아
+          <img src="icon-192.png" width="24" height="24" class="momotalk-modal-icon" alt="" data-character-avatar>
+          <span data-character-template="모모톡 - {name}">모모톡 - 우시오 노아</span>
         </h2>
         <button class="modal-close momotalk-modal-close" id="momotalk-history-close" type="button" aria-label="모모톡 대화 닫기">×</button>
       </div>
       
       <!-- 탭 컨트롤 -->
       <div class="momotalk-tabs" role="tablist" aria-label="모모톡 보기">
-        <button class="momotalk-tab active" id="tab-chat" type="button" role="tab" aria-selected="true" aria-controls="momotalk-chat-view">노아와 대화</button>
+        <button class="momotalk-tab active" id="tab-chat" type="button" role="tab" aria-selected="true" aria-controls="momotalk-chat-view" data-character-template="{shortName}와 대화">노아와 대화</button>
         <button class="momotalk-tab" id="tab-log" type="button" role="tab" aria-selected="false" aria-controls="momotalk-log-view">이벤트 기록</button>
       </div>
       
@@ -363,7 +364,7 @@
           <!-- JS로 채워짐 -->
         </div>
         <div class="momotalk-chat-input-area">
-          <input type="text" id="momotalk-chat-input" placeholder="메시지를 입력하세요..." />
+          <input type="text" id="momotalk-chat-input" placeholder="노아에게 메시지 보내기..." data-character-placeholder="{shortName}에게 메시지 보내기..." />
           <button id="momotalk-chat-send" type="button">전송</button>
         </div>
       </div>
@@ -450,6 +451,11 @@
 
 <script src="js/core.js?v=52"></script>
 <script src="characters/noa.js?v=52"></script>
+<!-- WEB_ORIGINAL_SAMPLE_START -->
+<script src="original/lumi/character.js"></script>
+<!-- WEB_ORIGINAL_SAMPLE_END -->
+<script src="js/character-loader.js"></script>
+<script src="js/character-theme.js"></script>
 <script src="js/app.js?v=52"></script>
 </body>
 </html>

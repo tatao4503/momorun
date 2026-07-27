@@ -276,6 +276,22 @@
     }
   }
 
+  async function syncWidgetSnapshot({ steps, goal }) {
+    const Widget = getNativePlugin('MomoWidget');
+    if (!Widget || typeof Widget.update !== 'function') return false;
+    try {
+      await Widget.update({
+        steps: Math.max(0, Math.round(+steps || 0)),
+        goal: Math.max(100, Math.round(+goal || fallbackGoal())),
+        dateKey: localDateStamp(),
+      });
+      return true;
+    } catch (err) {
+      console.warn('위젯 기록 갱신 실패:', err);
+      return false;
+    }
+  }
+
   let backgroundTaskInitialization = null;
 
   async function initBackgroundTasks(syncFn) {
@@ -366,7 +382,7 @@
     CIRC: 2 * Math.PI * 106, // ≈ 666
     pad, dateKey, legacyDateKey, todayKey, localDateStamp, daysBetweenDateStamps,
     fallbackGoal, parseRecord, safeSet, storage,
-    isNativePlatform, getNativePlugin, createStepDetector, syncHealthKit,
+    isNativePlatform, getNativePlugin, createStepDetector, syncHealthKit, syncWidgetSnapshot,
     initBackgroundTasks, setupAppLifecycle, registerServiceWorker,
   };
 })();

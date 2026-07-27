@@ -257,6 +257,7 @@
         const portrait = document.createElement('img');
         portrait.src = 'icon-192.png';
         portrait.alt = '';
+        portrait.dataset.characterAvatar = '';
         visual.appendChild(portrait);
       }
 
@@ -274,6 +275,7 @@
 
       button.appendChild(visual);
       button.appendChild(copy);
+      window.MomoTheme?.applyIdentity?.(button);
       button.addEventListener('click', () => openMemory(index));
       item.appendChild(button);
       els.memoryList.appendChild(item);

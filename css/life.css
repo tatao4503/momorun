@@ -34,7 +34,7 @@ body::before {
   inset: 0;
   z-index: -1;
   background-color: rgba(20, 34, 52, 0.82);
-  background-image: url("../noa-desktop.jpg");
+  background-image: var(--character-bg-desktop, url("../noa-desktop.jpg"));
   background-blend-mode: multiply;
   background-size: cover;
   background-position: center;
@@ -62,7 +62,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 18px;
   color: #fff;
   background-color: rgba(28, 47, 68, 0.42);
-  background-image: url("../noa-mobile.jpg");
+  background-image: var(--character-bg-mobile, url("../noa-mobile.jpg"));
   background-blend-mode: multiply;
   background-size: cover;
   background-position: center 17%;
@@ -86,6 +86,18 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .life-topbar { justify-content: space-between; gap: 12px; }
 .life-brand { gap: 11px; min-width: 0; }
+.base-pack-brand-avatar {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: none;
+  border: 2px solid var(--cyan-bright);
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 10px rgba(139, 228, 242, 0.46);
+}
+html[data-base-pack="lumi"] .life-brand .noa-halo { display: none; }
+html[data-base-pack="lumi"] .life-brand .base-pack-brand-avatar { display: block; }
 .life-top-actions {
   display: flex;
   align-items: center;
@@ -239,9 +251,9 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   justify-content: center;
 }
-.ring-center::after { content: "NOA'S LOG"; margin-top: 8px; color: var(--lavender); font-size: 8px; font-weight: 900; }
 .ring-center strong { color: var(--ink); font-size: 41px; line-height: 1; font-variant-numeric: tabular-nums; }
 .ring-center span { margin-top: 7px; color: var(--cyan); font-size: 12px; font-weight: 800; }
+.ring-center .ring-character-label { margin-top: 8px; color: var(--lavender); font-size: 8px; font-weight: 900; }
 .goal-line { justify-content: center; gap: 10px; margin-top: 5px; }
 .goal-line strong { color: var(--lavender); font-size: 15px; }
 .goal-line span { color: var(--muted); font-size: 12px; font-weight: 700; }
@@ -492,7 +504,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 @media (min-width: 700px) {
   .life-shell { margin-block: 28px; min-height: calc(100vh - 56px); min-height: calc(100dvh - 56px); }
-  .life-hero { background-image: url("../noa-desktop.jpg"); background-position: center 35%; }
+  .life-hero { background-image: var(--character-bg-desktop, url("../noa-desktop.jpg")); background-position: center 35%; }
 }
 
 @media (max-width: 360px) {

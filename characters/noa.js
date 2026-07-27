@@ -1,9 +1,153 @@
 // 모모런 캐릭터 데이터 — 우시오 노아.
-// "틀(엔진)"인 app.js는 이 데이터를 읽기만 한다. 새 최애캐 = 이런 파일 하나 추가.
-// (색/배경 이미지는 아직 CSS에 있음 → 2단계에서 테마까지 데이터화 예정)
+// "틀(엔진)"인 공통 JS는 이 데이터를 읽기만 한다. 새 최애캐 = 이런 파일 하나 추가.
 window.MomoCharacter = {
   id: 'noa',
   name: '우시오 노아',
+  shortName: '노아',
+  label: 'NOA',
+  avatar: 'icon-192.png',
+  availability: ['schale', 'lite', 'life', 'adventure'],
+  origin: {
+    type: 'fan',
+    notice: '블루 아카이브를 좋아하는 마음으로 만든 비공식·비상업 팬팩',
+  },
+  ui: {
+    selectorLiteTitle: '모모톡 버전',
+    selectorLiteAction: '모모톡으로 시작',
+    selectorRights: '비공식·비상업 팬 제작물',
+    liteTitle: '모모톡 버전',
+    liteFooter: '본 앱은 비공식 팬 게임입니다.',
+    memoLabel: '{name} · MOMOTALK',
+    lifeTtsNote: 'TTS는 공식 캐릭터 음성이나 게임 음원이 아닙니다.',
+    lifeRights: '비공식·비상업 팬 제작물이며 관련 권리는 각 권리자에게 있습니다.',
+    settingsBaseNote: '대사와 반응은 현재 노아 기본팩을 사용합니다.',
+  },
+
+  // 캐릭터 팩의 시각 언어. character-theme.js가 화면별 CSS 변수와 배경을 주입한다.
+  theme: {
+    backgrounds: {
+      default: {
+        id: 'theme_default',
+        name: '배경: 오리지널 (기본)',
+        cost: 0,
+        mobile: 'noa-mobile.jpg',
+        desktop: 'noa-desktop.jpg',
+      },
+      variants: [
+        {
+          id: 'theme_1',
+          className: 'theme-1',
+          name: '배경: 프라이빗 노아',
+          cost: 10,
+          mobile: 'noa1-mobile.jpg',
+          desktop: 'noa1-desktop.jpg',
+        },
+        {
+          id: 'theme_2',
+          className: 'theme-2',
+          name: '배경: 휴식 시간',
+          cost: 15,
+          mobile: 'noa2-mobile.jpg',
+          desktop: 'noa2-desktop.jpg',
+        },
+        {
+          id: 'theme_3',
+          className: 'theme-3',
+          name: '배경: 샬레의 노아',
+          cost: 20,
+          mobile: 'noa3-mobile.jpg',
+          desktop: 'noa3-desktop.jpg',
+        },
+      ],
+      modeCards: {
+        schale: 'noa3-mobile.jpg',
+        lite: 'noa1-mobile.jpg',
+        life: 'noa-mobile.jpg',
+      },
+    },
+    surfaces: {
+      selector: {
+        metaThemeColor: '#152338',
+        customAccentVariables: ['--cyan', '--cyan-deep'],
+        variables: {
+          '--ink': '#13243a',
+          '--muted': '#687b91',
+          '--cyan': '#64d6ea',
+          '--cyan-deep': '#278eae',
+          '--lavender': '#9482d1',
+          '--paper': '#f4fafc',
+          '--navy': '#152338',
+        },
+      },
+      schale: {
+        metaThemeColor: '#12162f',
+        customAccentVariables: ['--cyan', '--blue'],
+        variables: {
+          '--bg': '#12162f',
+          '--bg2': '#1a2144',
+          '--panel': 'rgba(14, 18, 44, 0.62)',
+          '--line': 'rgba(125, 211, 252, 0.24)',
+          '--violet': '#a78bfa',
+          '--violet-deep': '#7c5cf0',
+          '--violet-soft': '#c4b5fd',
+          '--cyan': '#7dd3fc',
+          '--blue': '#93c5fd',
+          '--gold': '#ffd36b',
+          '--text': '#ece8ff',
+          '--muted': '#b4bddc',
+          '--track': 'rgba(147, 197, 253, 0.14)',
+          '--good': '#7ff0b2',
+          '--ink': 'rgba(7, 10, 26, 0.42)',
+        },
+      },
+      lite: {
+        metaThemeColor: '#070a1a',
+        customAccentVariables: ['--cyan-soft'],
+        variables: {
+          '--bg': '#070a1a',
+          '--violet-soft': '#c4b5fd',
+          '--cyan-soft': '#7dd3fc',
+          '--good': '#34d399',
+        },
+      },
+      life: {
+        metaThemeColor: '#182334',
+        customAccentVariables: ['--cyan', '--cyan-bright'],
+        variables: {
+          '--ink': '#17263a',
+          '--ink-soft': '#2c405a',
+          '--muted': '#68788c',
+          '--line': '#cfdce3',
+          '--paper': '#f8fcfd',
+          '--canvas': '#e9f1f4',
+          '--cyan': '#3da7c7',
+          '--cyan-bright': '#8be4f2',
+          '--cyan-soft': '#dff4f7',
+          '--lavender': '#8d7ac7',
+          '--mint': '#2e9b7f',
+          '--rose': '#b85e7b',
+          '--gold': '#a67b2e',
+        },
+      },
+      adventure: {
+        metaThemeColor: '#101b2d',
+        customAccentVariables: ['--cyan', '--cyan-bright'],
+        variables: {
+          '--navy': '#101b2d',
+          '--navy-2': '#182941',
+          '--paper': '#eef7fa',
+          '--ink': '#14253b',
+          '--muted': '#698097',
+          '--cyan': '#63c7de',
+          '--cyan-bright': '#9cecff',
+          '--violet': '#8b7ce8',
+          '--green': '#5fc39b',
+          '--gold': '#e2bd62',
+          '--danger': '#e68686',
+        },
+      },
+    },
+  },
 
   adventure: {
     start: { x: 11, y: 86 },
@@ -170,3 +314,6 @@ window.MomoCharacter = {
     },
   },
 };
+
+window.MomoCharacterCatalog = window.MomoCharacterCatalog || {};
+window.MomoCharacterCatalog.noa = window.MomoCharacter;

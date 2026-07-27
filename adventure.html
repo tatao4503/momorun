@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-mode="schale">
+<html lang="ko" data-mode="schale" data-theme-surface="adventure">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -73,14 +73,14 @@
       <div id="checkpointLayer" class="checkpoint-layer"></div>
       <div id="patrolMarker" class="patrol-marker" aria-hidden="true">
         <span class="marker-beam"></span>
-        <img src="icon-192.png" alt="" />
+        <img src="icon-192.png" alt="" data-character-avatar />
       </div>
       <div class="map-label label-west">SCHALE</div>
       <div class="map-label label-east">MILLENNIUM</div>
     </section>
 
     <section class="patrol-briefing" aria-live="polite">
-      <img src="icon-192.png" alt="우시오 노아" />
+      <img src="icon-192.png" alt="우시오 노아" data-character-avatar />
       <div class="briefing-copy">
         <span id="sceneLabel">순찰 준비</span>
         <p id="patrolDialogue">오늘 기록을 확인하고 있습니다.</p>
@@ -96,7 +96,7 @@
     <section id="memoryArchive" class="memory-archive" aria-labelledby="memoryArchiveTitle">
       <header class="memory-archive-header">
         <div>
-          <span>NOA PATROL MEMORIES</span>
+          <span data-character-template="{label} PATROL MEMORIES">NOA PATROL MEMORIES</span>
           <h2 id="memoryArchiveTitle">순찰 추억 보관함</h2>
         </div>
         <strong id="memoryCount">0 / 5</strong>
@@ -117,12 +117,12 @@
       <span id="memoryModalNumber" class="memory-detail-number">MEMORY 01</span>
       <div class="memory-detail-portrait">
         <span aria-hidden="true"></span>
-        <img src="icon-192.png" alt="우시오 노아" />
+        <img src="icon-192.png" alt="우시오 노아" data-character-avatar />
       </div>
       <span id="memoryModalLocation" class="memory-detail-location">샬레 정문</span>
     </div>
     <div class="memory-detail-copy">
-      <span>NOA'S PATROL LOG</span>
+      <span data-character-template="{label} PATROL LOG">NOA PATROL LOG</span>
       <h2 id="memoryModalTitle">첫 페이지의 출발선</h2>
       <p id="memoryModalNote"></p>
       <div class="memory-detail-stamp">
@@ -135,6 +135,11 @@
 
 <script src="js/core.js"></script>
 <script src="characters/noa.js"></script>
+<!-- WEB_ORIGINAL_SAMPLE_START -->
+<script src="original/lumi/character.js"></script>
+<!-- WEB_ORIGINAL_SAMPLE_END -->
+<script src="js/character-loader.js"></script>
+<script src="js/character-theme.js"></script>
 <script src="js/adventure.js"></script>
 </body>
 </html>

@@ -32,20 +32,20 @@ body {
 body::before {
   content: ""; position: fixed; inset: 0; z-index: -2;
   background-color: var(--bg);
-  background-image: url("../noa-mobile.jpg");
+  background-image: var(--character-bg-mobile, url("../noa-mobile.jpg"));
   background-repeat: no-repeat;
   background-size: cover;
   background-position: top center;
 }
+body.theme-1::before { background-image: var(--character-bg-theme-1-mobile, url("../noa1-mobile.jpg")); background-size: cover; }
+body.theme-2::before { background-image: var(--character-bg-theme-2-mobile, url("../noa2-mobile.jpg")); background-size: cover; }
+body.theme-3::before { background-image: var(--character-bg-theme-3-mobile, url("../noa3-mobile.jpg")); background-size: cover; }
 @media (min-width: 700px) {
-  body::before { background-image: url("../noa-desktop.jpg"); background-position: center; }
-  body.theme-1::before { background-image: url("../noa1-desktop.jpg"); }
-  body.theme-2::before { background-image: url("../noa2-desktop.jpg"); }
-  body.theme-3::before { background-image: url("../noa3-desktop.jpg"); }
+  body::before { background-image: var(--character-bg-desktop, url("../noa-desktop.jpg")); background-position: center; }
+  body.theme-1::before { background-image: var(--character-bg-theme-1-desktop, url("../noa1-desktop.jpg")); }
+  body.theme-2::before { background-image: var(--character-bg-theme-2-desktop, url("../noa2-desktop.jpg")); }
+  body.theme-3::before { background-image: var(--character-bg-theme-3-desktop, url("../noa3-desktop.jpg")); }
 }
-body.theme-1::before { background-image: url("../noa1-mobile.jpg"); background-size: cover; }
-body.theme-2::before { background-image: url("../noa2-mobile.jpg"); background-size: cover; }
-body.theme-3::before { background-image: url("../noa3-mobile.jpg"); background-size: cover; }
 
 /* Lite App Layout */
 .lite-app {

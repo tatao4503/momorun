@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-mode="selector">
+<html lang="ko" data-mode="selector" data-theme-surface="selector">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -16,20 +16,52 @@
 <body>
 <main class="mode-shell">
   <header class="mode-header">
-    <div class="mode-brand">
-      <div class="noa-halo" aria-hidden="true">
-        <span class="halo-outer"></span>
-        <span class="halo-inner"></span>
-        <span class="halo-chip left"></span>
-        <span class="halo-chip right"></span>
+    <div class="mode-header-top">
+      <div class="mode-brand">
+        <div class="noa-halo" aria-hidden="true">
+          <span class="halo-outer"></span>
+          <span class="halo-inner"></span>
+          <span class="halo-chip left"></span>
+          <span class="halo-chip right"></span>
+        </div>
+        <img class="base-pack-brand-avatar" src="icon-192.png" alt="우시오 노아" data-character-avatar />
+        <div>
+          <span class="mode-kicker" data-character-template="{label} WALKING COMPANION">NOA WALKING COMPANION</span>
+          <h1>모모런 버전 선택</h1>
+        </div>
       </div>
-      <div>
-        <span class="mode-kicker">NOA WALKING COMPANION</span>
-        <h1>모모런 버전 선택</h1>
-      </div>
+      <button id="characterSettingsOpen" class="character-settings-open" type="button" aria-label="캐릭터 설정 열기" title="캐릭터 설정">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+        <span>캐릭터</span>
+      </button>
     </div>
     <p>오늘 걸을 방식을 선택하세요.</p>
   </header>
+
+  <!-- WEB_ORIGINAL_SAMPLE_START -->
+  <section class="base-pack-selector" aria-labelledby="basePackTitle">
+    <div class="base-pack-heading">
+      <div>
+        <span>BASE COMPANION</span>
+        <h2 id="basePackTitle">기본 동행팩</h2>
+      </div>
+      <small>대사와 화면 분위기 전환</small>
+    </div>
+    <div class="base-pack-options">
+      <button class="base-pack-option active" type="button" data-base-pack-target="noa" aria-pressed="true">
+        <img src="icon-192.png" alt="" />
+        <span><b>노아 팬팩</b><small>Full · Lite · Life</small></span>
+        <em>FAN</em>
+      </button>
+      <button class="base-pack-option" type="button" data-base-pack-target="lumi" aria-pressed="false">
+        <img src="original/lumi/avatar.jpg" alt="" />
+        <span><b>루미 오리지널</b><small>Lite · Life</small></span>
+        <em>ORIGINAL</em>
+      </button>
+    </div>
+    <p>루미는 모모런 엔진 시연을 위해 만든 오리지널 샘플 캐릭터입니다.</p>
+  </section>
+  <!-- WEB_ORIGINAL_SAMPLE_END -->
 
   <section class="mode-list" aria-label="모모런 버전">
     <article class="mode-card mode-schale" data-mode-card="schale">
@@ -59,7 +91,7 @@
         <div class="mode-title-line">
           <div>
             <span>MOMOTALK · LITE</span>
-            <h2>모모톡 버전</h2>
+            <h2 data-character-ui="selectorLiteTitle">모모톡 버전</h2>
           </div>
           <b data-mode-status></b>
         </div>
@@ -68,7 +100,7 @@
           <span>걸음</span><span>목표</span><span>7일 기록</span>
         </div>
         <a href="momotalk.html" class="mode-action" data-mode-target="lite">
-          <span>모모톡으로 시작</span>
+          <span data-character-ui="selectorLiteAction">모모톡으로 시작</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
         </a>
       </div>
@@ -98,8 +130,113 @@
 
   <footer class="mode-footer">
     <a href="privacy.html">개인정보 안내</a>
-    <span>비공식·비상업 팬 제작물</span>
+    <span data-character-ui="selectorRights">비공식·비상업 팬 제작물</span>
   </footer>
 </main>
+
+<div id="characterSettingsModal" class="character-settings-modal" role="dialog" aria-modal="true" aria-labelledby="characterSettingsTitle" aria-hidden="true" hidden>
+  <section id="characterSettingsDialog" class="character-settings-dialog">
+    <header class="character-dialog-header">
+      <div>
+        <span>LOCAL CHARACTER</span>
+        <h2 id="characterSettingsTitle">캐릭터 설정</h2>
+      </div>
+      <button id="characterSettingsClose" class="character-dialog-close" type="button" aria-label="캐릭터 설정 닫기" title="닫기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    </header>
+
+    <div class="character-preview">
+      <img id="characterPreviewImage" src="icon-192.png" alt="우시오 노아" data-character-avatar />
+      <div>
+        <span id="characterPreviewStatus">기본 이미지</span>
+        <strong id="characterPreviewName" data-character-name>우시오 노아</strong>
+        <small>WALKING COMPANION</small>
+      </div>
+    </div>
+
+    <form id="characterSettingsForm" class="character-settings-form">
+      <label class="character-field" for="characterNameInput">
+        <span>표시 이름</span>
+        <input id="characterNameInput" type="text" maxlength="24" autocomplete="off" value="우시오 노아" />
+      </label>
+
+      <fieldset class="character-color-field">
+        <legend>포인트 색상</legend>
+        <div id="characterColorSwatches" class="character-color-swatches">
+          <button type="button" data-character-color="#64d6ea" style="--swatch:#64d6ea" aria-label="노아 하늘색" aria-pressed="true"></button>
+          <button type="button" data-character-color="#8b7ce8" style="--swatch:#8b7ce8" aria-label="보라색" aria-pressed="false"></button>
+          <button type="button" data-character-color="#2e9b7f" style="--swatch:#2e9b7f" aria-label="청록색" aria-pressed="false"></button>
+          <button type="button" data-character-color="#d15c74" style="--swatch:#d15c74" aria-label="장미색" aria-pressed="false"></button>
+          <button type="button" data-character-color="#d19a37" style="--swatch:#d19a37" aria-label="금색" aria-pressed="false"></button>
+        </div>
+        <label class="character-color-custom" for="characterColorInput">
+          <span>직접 선택</span>
+          <input id="characterColorInput" type="color" value="#64d6ea" />
+        </label>
+      </fieldset>
+
+      <div class="character-image-field">
+        <div>
+          <span>대표 이미지</span>
+          <small>JPG · PNG · WebP · HEIC / 최대 8MB</small>
+        </div>
+        <div class="character-image-actions">
+          <button id="characterImageChoose" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 8 5-5 5 5"></path><path d="M5 21h14"></path></svg>
+            이미지 선택
+          </button>
+          <button id="characterImageRemove" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 15H6L5 6"></path></svg>
+            이미지 제거
+          </button>
+          <input id="characterImageInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden />
+        </div>
+      </div>
+
+      <section class="character-pack-field" aria-labelledby="characterPackTitle">
+        <div class="character-pack-heading">
+          <div>
+            <span id="characterPackTitle">캐릭터 팩</span>
+            <small>이름 · 색상 · 대표 이미지만 포함</small>
+          </div>
+          <span class="character-pack-version">VISUAL v1</span>
+        </div>
+        <div class="character-pack-actions">
+          <button id="characterPackExport" type="button" aria-describedby="characterPackNote">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21V9"></path><path d="m7 16 5 5 5-5"></path><path d="M5 3h14v6"></path></svg>
+            팩 내보내기
+          </button>
+          <button id="characterPackImport" type="button" aria-describedby="characterPackNote">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 8 5-5 5 5"></path><path d="M5 21h14v-6"></path></svg>
+            팩 가져오기
+          </button>
+          <input id="characterPackInput" type="file" accept=".json,.momorun.json,application/json" hidden />
+        </div>
+        <p id="characterPackStatus" class="character-pack-status" role="status" aria-live="polite" hidden></p>
+        <p id="characterPackNote" class="character-pack-note">가져온 팩은 미리보기에만 놓입니다. 확인 후 ‘설정 저장’을 눌러야 적용됩니다.</p>
+      </section>
+
+      <p class="character-local-note">설정과 이미지는 이 기기에만 저장됩니다. 사용 권한이 있는 이미지만 선택해 주세요.</p>
+      <p class="character-base-pack-note" data-character-ui="settingsBaseNote">대사와 반응은 현재 노아 기본팩을 사용합니다.</p>
+
+      <footer class="character-dialog-actions">
+        <button id="characterSettingsReset" class="character-reset" type="button">기본값 복원</button>
+        <button id="characterSettingsSave" class="character-save" type="submit">설정 저장</button>
+      </footer>
+    </form>
+  </section>
+</div>
+
+<div id="characterSettingsToast" class="character-settings-toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/core.js"></script>
+<script src="characters/noa.js"></script>
+<!-- WEB_ORIGINAL_SAMPLE_START -->
+<script src="original/lumi/character.js"></script>
+<!-- WEB_ORIGINAL_SAMPLE_END -->
+<script src="js/character-loader.js"></script>
+<script src="js/character-theme.js"></script>
+<script src="js/character-settings.js"></script>
 </body>
 </html>

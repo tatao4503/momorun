@@ -302,6 +302,7 @@
 	      return;
 	    }
 	    storageWarned = false;
+	    C.syncWidgetSnapshot({ steps: state.steps, goal: state.goal });
 	    checkPyroxenes();
 	  }
   function save() {
@@ -1193,7 +1194,8 @@
     const chatInput = $('momotalk-chat-input');
     if (chatInput) {
       if (GEMINI_API_KEY) {
-        chatInput.placeholder = "노아에게 메시지 보내기...";
+        const identity = window.MomoTheme?.getIdentity?.() || { shortName: CHAR.shortName || CHAR.name };
+        chatInput.placeholder = `${identity.shortName}에게 메시지 보내기...`;
         chatInput.disabled = false;
       } else {
         chatInput.placeholder = "설정에서 Gemini API Key를 등록해 주세요.";
@@ -1436,11 +1438,26 @@
   }
 
   // --- 상점 (Shop) 시스템 ---
+  const characterBackgrounds = (CHAR.theme && CHAR.theme.backgrounds) || {};
+  const defaultCharacterBackground = characterBackgrounds.default || {};
+  const characterBackgroundVariants = Array.isArray(characterBackgrounds.variants)
+    ? characterBackgrounds.variants
+    : [];
   const SHOP_ITEMS = [
-    { id: 'theme_default', type: 'theme', name: '배경: 오리지널 (기본)', cost: 0, unlocked: true },
-    { id: 'theme_1', type: 'theme', name: '배경: 프라이빗 노아', cost: 10, unlocked: false },
-    { id: 'theme_2', type: 'theme', name: '배경: 휴식 시간', cost: 15, unlocked: false },
-    { id: 'theme_3', type: 'theme', name: '배경: 샬레의 노아', cost: 20, unlocked: false },
+    {
+      id: defaultCharacterBackground.id || 'theme_default',
+      type: 'theme',
+      name: defaultCharacterBackground.name || '배경: 기본',
+      cost: Math.max(0, +defaultCharacterBackground.cost || 0),
+      unlocked: true,
+    },
+    ...characterBackgroundVariants.map(theme => ({
+      id: theme.id,
+      type: 'theme',
+      name: theme.name,
+      cost: Math.max(0, +theme.cost || 0),
+      unlocked: false,
+    })),
     { id: 'voice_secret', type: 'voice', name: '특별 보이스 해금', cost: 50, unlocked: false },
   ];
   function getPurchasedItems() {
@@ -1473,11 +1490,11 @@
     showMomotalk("배경화면이 변경되었습니다!");
   }
   function applyPurchasedItems() {
-    document.body.classList.remove('theme-1', 'theme-2', 'theme-3');
+    const themeClasses = characterBackgroundVariants.map(theme => theme.className).filter(Boolean);
+    document.body.classList.remove(...themeClasses);
     const equipped = storage.getItem('noa-equipped-theme');
-    if (equipped) {
-      document.body.classList.add(equipped.replace('_', '-'));
-    }
+    const selected = characterBackgroundVariants.find(theme => theme.id === equipped);
+    if (selected && selected.className) document.body.classList.add(selected.className);
   }
   
   function renderShop() {
@@ -1671,8 +1688,9 @@
 	      if (!isSelf) {
 	        const avatar = document.createElement('img');
 	        avatar.src = 'icon-192.png';
-	        avatar.alt = 'Noa';
+	        avatar.alt = CHAR.name;
 	        avatar.className = 'chat-avatar';
+	        avatar.dataset.characterAvatar = '';
 	        row.appendChild(avatar);
 	      }
 
@@ -1681,7 +1699,8 @@
 	      if (!isSelf) {
 	        const name = document.createElement('div');
 	        name.className = 'chat-sender-name';
-	        name.textContent = '노아';
+	        name.textContent = CHAR.shortName || CHAR.name;
+	        name.dataset.characterShortName = '';
 	        container.appendChild(name);
 	      }
 
@@ -1701,6 +1720,7 @@
 	      container.appendChild(wrapper);
 	      row.appendChild(container);
 	      list.appendChild(row);
+	      window.MomoTheme?.applyIdentity?.(row);
 	    });
 	    list.scrollTop = list.scrollHeight;
 	  }
@@ -1841,25 +1861,28 @@
 
     const avatar = document.createElement('img');
     avatar.src = 'icon-192.png';
-    avatar.alt = 'Noa';
+    avatar.alt = CHAR.name;
     avatar.className = 'chat-avatar';
+    avatar.dataset.characterAvatar = '';
     typingRow.appendChild(avatar);
 
     const container = document.createElement('div');
     container.className = 'chat-msg-container';
     const name = document.createElement('div');
     name.className = 'chat-sender-name';
-    name.textContent = '노아';
+    name.textContent = CHAR.shortName || CHAR.name;
+    name.dataset.characterShortName = '';
     const wrapper = document.createElement('div');
     wrapper.className = 'chat-bubble-wrapper';
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble typing-bubble';
-    bubble.textContent = '노아가 입력 중입니다...';
+    bubble.textContent = '답변을 작성하고 있습니다...';
     wrapper.appendChild(bubble);
     container.appendChild(name);
     container.appendChild(wrapper);
     typingRow.appendChild(container);
     list.appendChild(typingRow);
+    window.MomoTheme?.applyIdentity?.(typingRow);
     list.scrollTop = list.scrollHeight;
     
     const reply = await callGemini();
@@ -1932,6 +1955,7 @@
 	    const LN = C.getNativePlugin('LocalNotifications');
 	    if (!LN) return { ok: false, reason: 'unavailable' };
 	    try {
+	        const characterIdentity = window.MomoTheme?.getIdentity?.() || { name: CHAR.name };
 	        const perm = requestPermission
 	          ? await LN.requestPermissions()
 	          : (typeof LN.checkPermissions === 'function' ? await LN.checkPermissions() : { display: 'prompt' });
@@ -1948,14 +1972,14 @@
         await LN.schedule({
           notifications: [
             {
-              title: "모모톡 - 우시오 노아",
+              title: `모모톡 - ${characterIdentity.name}`,
               body: CHAR.notifications.schale.morning,
               id: 1,
               schedule: { on: { hour: 8, minute: 0 } },
               smallIcon: "ic_stat_name"
             },
             {
-              title: "모모톡 - 우시오 노아",
+              title: `모모톡 - ${characterIdentity.name}`,
               body: CHAR.notifications.schale.evening,
               id: 2,
               schedule: { on: { hour: 20, minute: 0 } },
@@ -2147,6 +2171,7 @@
   // init
 	  $('date').textContent = new Date().toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short' });
 	  load();
+	  C.syncWidgetSnapshot({ steps: state.steps, goal: state.goal });
 	  shownMile = milestoneIndexFor(Math.min(state.steps / state.goal, 1));
 	  maybeSyncHealthKit();
 	  initBackgroundTasks();

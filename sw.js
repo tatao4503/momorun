@@ -1,6 +1,6 @@
 // 🔖 버전 관리는 여기 한 곳만 — 코드/자산 바꾼 뒤 이 숫자만 올리면 캐시 갱신됨.
 // (HTML의 ?v= 쿼리는 제거함: 코드 자산은 SW network-first로 항상 최신 반영)
-const CACHE_NAME = 'noa-manbogi-v53';
+const CACHE_NAME = 'noa-manbogi-v58';
 const APP_ASSETS = [
   './',
   './index.html',
@@ -16,7 +16,11 @@ const APP_ASSETS = [
   './css/fanmail.css',
   './js/core.js',
   './js/mode-router.js',
+  './js/character-loader.js',
+  './js/character-theme.js',
+  './js/character-settings.js',
   './characters/noa.js',
+  './original/lumi/character.js',
   './js/app.js',
   './js/fanmail.js',
   './css/lite.css',
@@ -34,6 +38,8 @@ const APP_ASSETS = [
   './noa2-desktop.jpg',
   './noa3-mobile.jpg',
   './noa3-desktop.jpg',
+  './original/lumi/mobile.jpg',
+  './original/lumi/avatar.jpg',
   './icon-192.png',
   './icon-512.png',
   './js/confetti.browser.min.js',
