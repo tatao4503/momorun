@@ -34,8 +34,10 @@
   const pageMode = document.documentElement.dataset.mode || '';
   const params = new URLSearchParams(window.location.search);
   const schaleWasRequested = params.get('mode') === 'schale' || params.has('full');
+  const nativeRuntime = isNativeApp();
+  document.documentElement.classList.toggle('native-app', nativeRuntime);
 
-  if (pageMode === 'schale' && isNativeApp() && !schaleWasRequested) {
+  if (pageMode === 'schale' && nativeRuntime && !schaleWasRequested) {
     const savedMode = readMode();
     window.location.replace(savedMode ? ROUTES[savedMode] : 'modes.html');
     return;

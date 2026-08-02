@@ -28,6 +28,11 @@ body {
   overflow-x: hidden;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   min-height: 100vh;
   min-height: 100dvh;
@@ -43,6 +48,7 @@ body.memory-open {
 button,
 a {
   font: inherit;
+  touch-action: manipulation;
 }
 
 :where(button, a):focus-visible {

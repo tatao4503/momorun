@@ -9,9 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="모모런 Life" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" href="icon-192.png" />
 <title>모모런 - 일상 버전</title>
-<script src="js/mode-router.js?v=49"></script>
-<link rel="stylesheet" href="css/life.css?v=49" />
+<script src="js/mode-router.js"></script>
+<link rel="stylesheet" href="css/life.css" />
 </head>
 <body>
 <div class="life-shell">
@@ -35,7 +36,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
           <span>버전</span>
         </a>
-        <button id="quickSync" class="icon-button" type="button" aria-label="건강 앱 걸음 동기화" title="건강 앱 걸음 동기화">
+        <button id="quickSync" class="icon-button" type="button" aria-label="건강 앱 걸음 동기화" aria-busy="false" title="건강 앱 걸음 동기화">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M20 6v5h-5"></path><path d="M4 18v-5h5"></path><path d="M6.1 9A7 7 0 0 1 18 6l2 2"></path><path d="M17.9 15A7 7 0 0 1 6 18l-2-2"></path>
           </svg>
@@ -58,7 +59,7 @@
         <b id="recordStatus">기록 준비</b>
       </div>
       <div class="progress-section">
-        <div class="ring-wrap">
+        <div id="lifeGoalProgress" class="ring-wrap" role="progressbar" aria-label="오늘 걸음 목표" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0보, 목표 10,000보 중 0%">
           <svg class="progress-ring" viewBox="0 0 240 240" aria-hidden="true">
             <circle cx="120" cy="120" r="106" fill="none" stroke="#e5eaee" stroke-width="14"></circle>
             <circle id="lifeProgress" cx="120" cy="120" r="106" fill="none" stroke="#4da7c8" stroke-width="14" stroke-linecap="round" stroke-dasharray="666" stroke-dashoffset="666"></circle>
@@ -97,7 +98,7 @@
         </div>
       </div>
 
-      <button id="syncHealth" class="primary-action" type="button">
+      <button id="syncHealth" class="primary-action" type="button" aria-busy="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1.1-1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.8-7.6a5.5 5.5 0 0 0 1-8.8z"></path></svg>
         <span id="syncHealthLabel">건강 앱 연결</span>
       </button>
@@ -198,13 +199,13 @@
 
 <div id="lifeToast" class="life-toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/core.js?v=49"></script>
-<script src="characters/noa.js?v=49"></script>
+<script src="js/core.js"></script>
+<script src="characters/noa.js"></script>
 <!-- WEB_ORIGINAL_SAMPLE_START -->
 <script src="original/lumi/character.js"></script>
 <!-- WEB_ORIGINAL_SAMPLE_END -->
 <script src="js/character-loader.js"></script>
 <script src="js/character-theme.js"></script>
-<script src="js/life.js?v=49"></script>
+<script src="js/life.js"></script>
 </body>
 </html>

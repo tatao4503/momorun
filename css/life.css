@@ -17,7 +17,11 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { background: #18263a; }
+html {
+  background: #18263a;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 body {
   margin: 0;
   min-height: 100vh;
@@ -40,6 +44,7 @@ body::before {
   background-position: center;
 }
 button, input, a { font: inherit; }
+button, a, [role="tab"], [role="switch"] { touch-action: manipulation; }
 button { -webkit-tap-highlight-color: transparent; }
 :where(button, a, input):focus-visible {
   outline: 3px solid var(--cyan-bright);

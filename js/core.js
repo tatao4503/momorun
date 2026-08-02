@@ -292,6 +292,45 @@
     }
   }
 
+  async function feedback(kind = 'light') {
+    const normalized = ['light', 'medium', 'heavy', 'selection', 'success', 'warning', 'error'].includes(kind)
+      ? kind
+      : 'light';
+    const Feedback = getNativePlugin('MomoFeedback');
+
+    if (Feedback) {
+      try {
+        if (normalized === 'selection' && typeof Feedback.selection === 'function') {
+          await Feedback.selection();
+          return true;
+        }
+        if (['success', 'warning', 'error'].includes(normalized) && typeof Feedback.notification === 'function') {
+          await Feedback.notification({ type: normalized });
+          return true;
+        }
+        if (typeof Feedback.impact === 'function') {
+          await Feedback.impact({ style: normalized });
+          return true;
+        }
+      } catch (err) {
+        console.warn('기기 피드백 재생 실패:', err);
+      }
+    }
+
+    if (typeof navigator.vibrate === 'function') {
+      const pattern = normalized === 'success'
+        ? [24, 40, 32]
+        : normalized === 'warning' || normalized === 'error'
+          ? [36, 50, 36]
+          : normalized === 'heavy'
+            ? [28]
+            : [14];
+      navigator.vibrate(pattern);
+      return true;
+    }
+    return false;
+  }
+
   let backgroundTaskInitialization = null;
 
   async function initBackgroundTasks(syncFn) {
@@ -383,6 +422,7 @@
     pad, dateKey, legacyDateKey, todayKey, localDateStamp, daysBetweenDateStamps,
     fallbackGoal, parseRecord, safeSet, storage,
     isNativePlatform, getNativePlugin, createStepDetector, syncHealthKit, syncWidgetSnapshot,
+    feedback,
     initBackgroundTasks, setupAppLifecycle, registerServiceWorker,
   };
 })();

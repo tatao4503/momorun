@@ -31,6 +31,7 @@
   const els = {
     steps: $('steps'),
     prog: $('prog'),
+    progressA11y: $('liteGoalProgress'),
     goaltxt: $('goaltxt'),
     toggle: $('toggle'),
     sample: $('sample'),
@@ -124,6 +125,7 @@
     const index = reactionIndexFor(state.steps / Math.max(100, state.goal));
     if (index <= state.shownReaction) return '';
     state.shownReaction = index;
+    C.feedback(index === liteReactions.length - 1 ? 'success' : 'light');
     return liteReactions[index].t;
   }
 
@@ -166,6 +168,14 @@
     const ratio = Math.min(state.steps / state.goal, 1);
     els.prog.style.strokeDashoffset = CIRC * (1 - ratio);
     const remain = Math.max(state.goal - state.steps, 0);
+    const percent = Math.round(ratio * 100);
+    if (els.progressA11y) {
+      els.progressA11y.setAttribute('aria-valuenow', String(percent));
+      els.progressA11y.setAttribute(
+        'aria-valuetext',
+        `${state.steps.toLocaleString()}보, 목표 ${state.goal.toLocaleString()}보 중 ${percent}%`
+      );
+    }
     els.goaltxt.textContent = remain > 0 
       ? `목표까지 ${remain.toLocaleString()}보 남음` 
       : `목표 달성 완료!`;
@@ -242,7 +252,7 @@
   }
 
   els.toggle.onclick = () => {
-    if (navigator.vibrate) navigator.vibrate([15]);
+    C.feedback('selection');
     state.running ? stop() : start();
   };
 

@@ -28,6 +28,7 @@
     recordStatus: $('recordStatus'),
     steps: $('lifeSteps'),
     progress: $('lifeProgress'),
+    progressA11y: $('lifeGoalProgress'),
     percent: $('goalPercent'),
     goalRemain: $('goalRemain'),
     memo: $('lifeMemo'),
@@ -174,6 +175,13 @@
     els.steps.textContent = state.steps.toLocaleString('ko-KR');
     els.progress.style.strokeDashoffset = String(CIRC * (1 - ratio));
     els.percent.textContent = `${percent}%`;
+    if (els.progressA11y) {
+      els.progressA11y.setAttribute('aria-valuenow', String(percent));
+      els.progressA11y.setAttribute(
+        'aria-valuetext',
+        `${state.steps.toLocaleString('ko-KR')}보, 목표 ${state.goal.toLocaleString('ko-KR')}보 중 ${percent}%`
+      );
+    }
     els.goalRemain.textContent = remain > 0 ? `목표 ${formatSteps(state.goal)}` : '오늘 목표 달성';
     els.memo.textContent = memoText();
     els.remain.textContent = formatSteps(remain);
@@ -263,6 +271,8 @@
     state.syncing = syncing;
     els.sync.disabled = syncing;
     els.quickSync.disabled = syncing;
+    els.sync.setAttribute('aria-busy', syncing ? 'true' : 'false');
+    els.quickSync.setAttribute('aria-busy', syncing ? 'true' : 'false');
     els.quickSync.classList.toggle('syncing', syncing);
     render();
   }
@@ -298,13 +308,18 @@
       if (announce) {
         const added = state.steps - before;
         showToast(added > 0 ? `${formatSteps(added)}를 새로 반영했습니다.` : '오늘 걸음이 최신 상태입니다.');
+        C.feedback('success');
       }
     } else if (result && result.reason === 'permission-denied') {
       state.healthEnabled = false;
       storage.removeItem(HEALTH_KEY);
-      if (announce) showToast('건강 앱의 걸음 읽기 권한이 필요합니다.');
+      if (announce) {
+        showToast('건강 앱의 걸음 읽기 권한이 필요합니다.');
+        C.feedback('warning');
+      }
     } else if (announce) {
       showToast('건강 앱 동기화를 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      C.feedback('error');
     }
     setSyncing(false);
     if (result && result.ok) C.initBackgroundTasks(() => syncHealth({ announce: false }));
@@ -441,7 +456,10 @@
   }
 
   document.querySelectorAll('[data-tab]').forEach(button => {
-    button.addEventListener('click', () => selectTab(button.dataset.tab));
+    button.addEventListener('click', () => {
+      C.feedback('selection');
+      selectTab(button.dataset.tab);
+    });
   });
   els.quickSync.addEventListener('click', () => syncHealth({ requestAuthorization: !state.healthEnabled }));
   els.sync.addEventListener('click', () => syncHealth({ requestAuthorization: !state.healthEnabled }));
@@ -449,6 +467,7 @@
   els.speakWeekMemo.addEventListener('click', () => speak(els.weekMemo.textContent));
   els.notificationToggle.addEventListener('click', () => setNotifications(!state.notificationsEnabled));
   els.ttsToggle.addEventListener('click', () => {
+    C.feedback('selection');
     state.ttsEnabled = !state.ttsEnabled;
     storage.setItem(TTS_KEY, state.ttsEnabled ? '1' : '0');
     render();
@@ -464,6 +483,7 @@
     saveNow();
     render();
     showToast(`하루 목표를 ${formatSteps(nextGoal)}로 저장했습니다.`);
+    C.feedback('success');
   });
 
   window.addEventListener('pagehide', saveNow);

@@ -9,9 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="노아 모모톡" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" href="icon-192.png" />
 <title>모모런 - 모모톡 라이트</title>
-<script src="js/mode-router.js?v=50"></script>
-<link rel="stylesheet" href="css/lite.css?v=50" />
+<script src="js/mode-router.js"></script>
+<link rel="stylesheet" href="css/lite.css" />
 </head>
 <body>
 <div class="lite-app">
@@ -32,7 +33,7 @@
   <div class="spacer"></div>
 
   <div class="panel">
-    <div class="ring-wrap">
+    <div id="liteGoalProgress" class="ring-wrap" role="progressbar" aria-label="오늘 걸음 목표" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0보, 목표 10,000보 중 0%">
       <svg class="ring" viewBox="0 0 240 240" aria-hidden="true">
         <circle cx="120" cy="120" r="106" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="16"/>
         <circle id="prog" cx="120" cy="120" r="106" fill="none" stroke="#7dd3fc" stroke-width="16"
@@ -74,13 +75,13 @@
   <span data-character-ui="liteFooter">본 앱은 비공식 팬 게임입니다.</span> | <a href="privacy.html">개인정보처리방침</a>
 </footer>
 
-<script src="js/core.js?v=50"></script>
-<script src="characters/noa.js?v=50"></script>
+<script src="js/core.js"></script>
+<script src="characters/noa.js"></script>
 <!-- WEB_ORIGINAL_SAMPLE_START -->
 <script src="original/lumi/character.js"></script>
 <!-- WEB_ORIGINAL_SAMPLE_END -->
 <script src="js/character-loader.js"></script>
 <script src="js/character-theme.js"></script>
-<script src="js/lite.js?v=50"></script>
+<script src="js/lite.js"></script>
 </body>
 </html>

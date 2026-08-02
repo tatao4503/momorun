@@ -27,6 +27,8 @@
 	    height: auto;
 	    overflow-x: hidden;
 	    overflow-y: auto;
+	    -webkit-text-size-adjust: 100%;
+	    text-size-adjust: 100%;
 	  }
   body {
     margin: 0;
@@ -79,7 +81,7 @@
     max-width: 440px;
     min-height: 100vh;
     min-height: 100dvh;
-    padding: 22px 20px 40px;
+    padding: calc(env(safe-area-inset-top, 0px) + 22px) 20px calc(env(safe-area-inset-bottom, 0px) + 40px);
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -87,7 +89,7 @@
   }
 
   @media (min-width: 1024px) {
-    .app { max-width: 900px; padding: 40px 20px; }
+    .app { max-width: 900px; padding: calc(env(safe-area-inset-top, 0px) + 40px) 20px calc(env(safe-area-inset-bottom, 0px) + 40px); }
     .desktop-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -217,6 +219,11 @@
 	    background: rgba(255,255,255,0.08);
 	  }
 
+	  html.native-app #dev-btn,
+	  html.native-app .secondary-actions > .row {
+	    display: none;
+	  }
+
 	  /* Hero space lets the Noa artwork show through at the top */
 	  .hero-space { flex: 1 0 auto; min-height: 28vh; position: relative; }
 	  /* 배경 일러스트 → 패널로 넘어가는 경계를 부드럽게 잇는 램프 */
@@ -327,7 +334,9 @@
 	  button {
 	    font: inherit; border: none; border-radius: 14px; padding: 15px; cursor: pointer;
 	    font-weight: 700; font-size: 16px; transition: transform .06s, opacity .2s;
+	    touch-action: manipulation;
 	  }
+	  a { touch-action: manipulation; }
 	  button:active { transform: scale(0.98); }
 	  button:disabled {
 	    cursor: not-allowed;

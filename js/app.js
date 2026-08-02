@@ -458,11 +458,10 @@
   }
 
 	  // --- 음성 ---
-	  // 사용자가 준비한 로컬 음성 클립을 쓰려면 voice/ 폴더에 mp3를 넣고 아래 맵에 "대사": "voice/파일.mp3" 추가.
-	  // 매핑이 없으면 브라우저 음성합성(TTS)으로 자동 대체.
+	  // 로컬 클립은 voice/manifest.js에 설정하며, 비어 있으면 기기 TTS를 사용한다.
     let currentSpeakAudio = null;
     let LOCAL_VOICE_PACK_READY = false;
-	  const VOICE_CLIPS = {
+	  const VOICE_CLIP_PRESETS = {
     "기록할 준비됐어요. 오늘도 시작할까요, 선생님?": "voice/greeting1.mp3",
     "선생님의 걸음, 한 걸음도 빠짐없이 기억해 둘게요.": "voice/greeting2.mp3",
     "오늘은 몇 보까지 걸으실 생각이세요?": "voice/greeting3.mp3",
@@ -477,6 +476,12 @@
     "수고하셨습니다, 선생님.": "voice/goal.mp3",
     "음성을 켰어요, 선생님.": "voice/voice_on.mp3"
   };
+	  const VOICE_MANIFEST = window.MomoVoiceManifest || { clips: {}, bgm: '' };
+	  const configuredVoiceClips = VOICE_MANIFEST.clips && typeof VOICE_MANIFEST.clips === 'object'
+	    ? VOICE_MANIFEST.clips
+	    : {};
+	  const VOICE_CLIPS = Object.fromEntries(Object.entries(configuredVoiceClips)
+	    .filter(([line, file]) => VOICE_CLIP_PRESETS[line] === file));
 	  let voiceOn = storage.getItem('noa-manbogi-voice') === '1' || storage.getItem('momorun-voice') === '1';
   let GEMINI_API_KEY = storage.getItem('noa-gemini-key') || '';
   let ELEVENLABS_API_KEY = storage.getItem('noa-elevenlabs-key') || '';
@@ -500,13 +505,7 @@
   }
 
   async function checkLocalVoicePack() {
-    try {
-      // 대표 오디오 클립 greeting1.mp3의 실제 존재(서빙) 여부를 동적으로 탐색
-      const response = await fetch('voice/greeting1.mp3', { method: 'GET', cache: 'no-store' });
-      LOCAL_VOICE_PACK_READY = response.ok;
-    } catch (_) {
-      LOCAL_VOICE_PACK_READY = false;
-    }
+    LOCAL_VOICE_PACK_READY = Object.keys(VOICE_CLIPS).length > 0;
     updateVoiceBtn();
   }
   async function speak(text) {
@@ -750,6 +749,7 @@
   const els = {
     steps: $('steps'),
     prog: $('prog'),
+    progressA11y: $('fullGoalProgress'),
     goaltxt: $('goaltxt'),
     dist: $('dist'),
     kcal: $('kcal'),
@@ -866,6 +866,14 @@
     const kcal = 3.5 * weight * hours;
     els.kcal.textContent = Math.round(kcal);
     els.pct.textContent = Math.round(ratio * 100) + '%';
+    if (els.progressA11y) {
+      const percent = Math.round(ratio * 100);
+      els.progressA11y.setAttribute('aria-valuenow', String(percent));
+      els.progressA11y.setAttribute(
+        'aria-valuetext',
+        `${state.steps.toLocaleString()}보, 목표 ${state.goal.toLocaleString()}보 중 ${percent}%`
+      );
+    }
     els.todayRecord.textContent = `${state.steps.toLocaleString()}보`;
     els.phase.textContent = phaseFor(ratio);
 
@@ -930,6 +938,7 @@
     
     if (state.steps >= state.goal && !state.goalReachedToday) {
       state.goalReachedToday = true;
+      C.feedback('success');
       if (typeof confetti === 'function') {
         confetti({
           particleCount: 150,
@@ -1081,7 +1090,7 @@
 		    voiceOn = !voiceOn;
 	    storage.setItem('noa-manbogi-voice', voiceOn ? '1' : '0');
 	    updateVoiceBtn();
-	    if (navigator.vibrate) navigator.vibrate([15]);
+	    C.feedback('selection');
 	    if (voiceOn) speak('음성을 켰어요, 선생님.');
 	    else if ('speechSynthesis' in window) speechSynthesis.cancel();
   };
@@ -1092,7 +1101,7 @@
   };
 
 	  // --- BGM ---
-	  const BGM_FILE = 'voice/bgm.mp3';
+	  const BGM_FILE = typeof VOICE_MANIFEST.bgm === 'string' ? VOICE_MANIFEST.bgm.trim() : '';
 	  let bgmOn = false;
 	  let bgmAudio = null;
 	  let bgmAvailable = false;
@@ -1103,7 +1112,7 @@
 	      btn.disabled = true;
 	      btn.classList.remove('on');
 	      btn.textContent = 'BGM 준비중';
-	      btn.title = 'voice/bgm.mp3를 추가하면 자동으로 활성화됩니다.';
+	      btn.title = '로컬 BGM이 설정되지 않았습니다.';
 	      return;
 	    }
 	    btn.disabled = false;
@@ -1112,6 +1121,11 @@
 	    btn.classList.toggle('on', bgmOn);
 	  }
 	  async function initBgmAvailability() {
+	    if (!BGM_FILE) {
+	      bgmAvailable = false;
+	      updateBgmBtn();
+	      return;
+	    }
 	    try {
 	      // 로컬 파일 프로토콜 및 가상 서버(HEAD 미지원 가능성) 대응을 위해 GET으로 점검
 	      const response = await fetch(BGM_FILE, { method: 'GET', cache: 'no-store' });
@@ -1123,12 +1137,12 @@
 	  }
 	  $('bgm-btn').onclick = () => {
 	    if (!bgmAvailable) {
-	      showMomotalk("BGM 파일은 아직 준비 중이에요. voice/bgm.mp3를 추가하면 바로 재생할 수 있습니다.");
+	      showMomotalk("BGM은 아직 설정되지 않았어요.");
 	      return;
 	    }
 	    bgmOn = !bgmOn;
 	    const btn = $('bgm-btn');
-	    if (navigator.vibrate) navigator.vibrate([15]);
+	    C.feedback('selection');
 	    
 	    if (bgmOn) {
 	      updateBgmBtn();
@@ -1137,7 +1151,7 @@
 	        bgmAudio.loop = true;
 	      }
 	      bgmAudio.play().catch(e => {
-	        showMomotalk("BGM 파일(voice/bgm.mp3)을 찾을 수 없습니다.");
+	        showMomotalk("BGM 파일을 재생할 수 없어요.");
 	        bgmAvailable = false;
 	        bgmOn = false;
 	        updateBgmBtn();
@@ -1209,7 +1223,7 @@
     $('hide-ui-btn').onclick = () => {
       document.body.classList.add('hide-ui');
       document.body.classList.add('memorial-mode');
-      if (navigator.vibrate) navigator.vibrate([15]);
+      C.feedback('selection');
       say(pickLine(noaLines.memorial));
     };
   }
@@ -1222,7 +1236,7 @@
       if (affection.level < 2) {
         document.body.classList.remove('memorial-mode');
       }
-      if (navigator.vibrate) navigator.vibrate([15]);
+      C.feedback('selection');
     };
   }
 
@@ -1479,7 +1493,7 @@
     }
   }
   function equipTheme(id) {
-    if (navigator.vibrate) navigator.vibrate([15]);
+    C.feedback('selection');
     if (id === 'theme_default') {
       storage.removeItem('noa-equipped-theme');
     } else {
@@ -2154,7 +2168,7 @@
         storage.setItem('noa-sensei-stamped', '1');
         
         // 햅틱 진동 피드백
-        if (navigator.vibrate) navigator.vibrate([30, 50]);
+        C.feedback('success');
         
         // 결재 도장 효과음 (오프라인 안전한 Web Audio)
         playBeep(600, 120, 0.4);
