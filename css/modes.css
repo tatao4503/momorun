@@ -74,7 +74,8 @@ button { touch-action: manipulation; }
   object-fit: cover;
   box-shadow: 0 0 14px rgba(100, 214, 234, 0.62);
 }
-html[data-base-pack="lumi"] .mode-brand .noa-halo { display: none; }
+/* 헤일로는 노아 팬팩 전용 장식. 다른 팩(루미·빈 동행팩·향후 추가분)에는 표시하지 않는다. */
+html:not([data-base-pack="noa"]) .mode-brand .noa-halo { display: none; }
 html[data-base-pack="lumi"] .mode-brand .base-pack-brand-avatar { display: block; }
 
 .mode-kicker {
