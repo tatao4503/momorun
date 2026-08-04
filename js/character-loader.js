@@ -64,7 +64,8 @@
   const surface = root.dataset.themeSurface || '';
   if ((surface === 'schale' || surface === 'adventure')
     && !(selected.availability || []).includes(surface)) {
-    window.location.replace('life.html');
+    // 조용히 튕기지 않고, 일상 버전에서 이유를 안내하도록 사유를 전달한다.
+    window.location.replace(`life.html?blocked=${encodeURIComponent(surface)}`);
     return;
   }
 

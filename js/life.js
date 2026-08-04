@@ -492,6 +492,22 @@
   });
 
   load();
+
+  // 팬 전용 화면(샬레·순찰)에서 되돌아온 경우, 조용히 튕긴 것처럼 보이지 않게 이유를 알린다.
+  (() => {
+    const params = new URLSearchParams(window.location.search);
+    const blocked = params.get('blocked');
+    if (blocked !== 'schale' && blocked !== 'adventure') return;
+    const label = blocked === 'adventure' ? '순찰 지도' : '샬레 버전';
+    // 받침 유무에 따라 은/는을 고른다. (순찰 지도'는' / 샬레 버전'은')
+    const code = label.charCodeAt(label.length - 1);
+    const hasBatchim = code >= 0xac00 && code <= 0xd7a3 && (code - 0xac00) % 28 !== 0;
+    setTimeout(() => showToast(`${label}${hasBatchim ? '은' : '는'} 노아 팬팩 전용이라 일상 버전으로 열었어요.`), 400);
+    params.delete('blocked');
+    const query = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (query ? `?${query}` : ''));
+  })();
+
   C.syncWidgetSnapshot({ steps: state.steps, goal: state.goal });
   C.setupAppLifecycle(() => syncHealth({ announce: false }));
   if (state.healthEnabled) {
