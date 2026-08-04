@@ -103,7 +103,8 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 /* 헤일로는 노아 팬팩 전용 장식. 다른 팩(루미·빈 동행팩·향후 추가분)에는 표시하지 않는다. */
 html:not([data-base-pack="noa"]) .life-brand .noa-halo { display: none; }
-html[data-base-pack="lumi"] .life-brand .base-pack-brand-avatar { display: block; }
+/* 노아 외 팩은 헤일로 대신 팩 아바타를 보여준다. */
+html:not([data-base-pack="noa"]) .life-brand .base-pack-brand-avatar { display: block; }
 .life-top-actions {
   display: flex;
   align-items: center;

@@ -66,6 +66,13 @@
       </button>
     </div>
     <p>루미는 모모런 엔진 시연을 위해 만든 오리지널 샘플 캐릭터입니다. ‘내 최애 넣기’는 특정 캐릭터를 가정하지 않는 빈 동행팩으로, 설정에서 이름·색·사진을 채우면 그대로 내 최애가 됩니다.</p>
+    <div id="blankPackHint" class="blank-pack-hint" hidden>
+      <div>
+        <strong>아직 비어 있는 액자예요</strong>
+        <small>이름·색·사진을 채우면 오늘부터 내 최애와 함께 걷습니다.</small>
+      </div>
+      <button id="blankPackHintAction" class="blank-pack-hint-action" type="button">최애 채우기</button>
+    </div>
   </section>
   <!-- WEB_ORIGINAL_SAMPLE_END -->
 
@@ -96,13 +103,13 @@
       <div class="mode-copy">
         <div class="mode-title-line">
           <div>
-            <span>MOMOTALK · LITE</span>
+            <span data-character-template="{label} · LITE">MOMORUN · LITE</span>
             <h2 data-character-ui="selectorLiteTitle">모모톡 버전</h2>
           </div>
           <b data-mode-status></b>
         </div>
         <p>가볍게 오늘 걸음만</p>
-        <div class="mode-tags" aria-label="모모톡 버전 주요 기능">
+        <div class="mode-tags" aria-label="라이트 버전 주요 기능">
           <span>걸음</span><span>목표</span><span>7일 기록</span>
         </div>
         <a href="momotalk.html" class="mode-action" data-mode-target="lite">

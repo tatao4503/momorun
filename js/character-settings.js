@@ -27,7 +27,18 @@
     reset: $('characterSettingsReset'),
     save: $('characterSettingsSave'),
     toast: $('characterSettingsToast'),
+    blankHint: $('blankPackHint'),
+    blankHintAction: $('blankPackHintAction'),
   };
+
+  // 빈 동행팩을 골랐지만 아직 아무것도 채우지 않은 상태에서만 안내를 띄운다.
+  function refreshBlankHint() {
+    if (!els.blankHint) return;
+    const isBlankPack = (character.origin && character.origin.type === 'original')
+      && character.id === 'companion';
+    const filled = Boolean(theme.getCustomization());
+    els.blankHint.hidden = !(isBlankPack && !filled);
+  }
 
   const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
   const MAX_PACK_BYTES = 2 * 1024 * 1024;
@@ -203,6 +214,7 @@
   }
 
   els.open.addEventListener('click', openModal);
+  if (els.blankHintAction) els.blankHintAction.addEventListener('click', openModal);
   els.close.addEventListener('click', closeModal);
   els.modal.addEventListener('click', event => {
     if (event.target === els.modal) closeModal();
@@ -324,6 +336,7 @@
     previewStatusOverride = '';
     theme.apply();
     closeModal();
+    refreshBlankHint();
     showToast('캐릭터 설정을 저장했습니다.');
   });
   els.reset.addEventListener('click', () => {
@@ -333,6 +346,7 @@
     previewStatusOverride = '';
     theme.apply();
     populate();
+    refreshBlankHint();
     showToast(`${character.shortName || character.name} 기본 설정으로 돌아왔습니다.`);
   });
   document.addEventListener('keydown', event => {
@@ -358,4 +372,5 @@
   });
 
   populate();
+  refreshBlankHint();
 })();

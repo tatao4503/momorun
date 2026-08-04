@@ -76,7 +76,8 @@ button { touch-action: manipulation; }
 }
 /* 헤일로는 노아 팬팩 전용 장식. 다른 팩(루미·빈 동행팩·향후 추가분)에는 표시하지 않는다. */
 html:not([data-base-pack="noa"]) .mode-brand .noa-halo { display: none; }
-html[data-base-pack="lumi"] .mode-brand .base-pack-brand-avatar { display: block; }
+/* 노아 외 팩은 헤일로 대신 팩 아바타를 보여준다. */
+html:not([data-base-pack="noa"]) .mode-brand .base-pack-brand-avatar { display: block; }
 
 .mode-kicker {
   color: #a7edf6;
@@ -207,7 +208,9 @@ html[data-base-pack="lumi"] .mode-brand .base-pack-brand-avatar { display: block
 .base-pack-option b,
 .base-pack-option small { display: block; }
 .base-pack-option b {
-  overflow-wrap: anywhere;
+  /* 한국어 라벨이 단어 중간에서 잘리지 않도록 어절 단위로 줄바꿈한다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
   font-size: 11px;
   line-height: 1.25;
 }
@@ -795,3 +798,41 @@ body.character-settings-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
+/* 빈 동행팩을 고른 직후 안내 — 채우기 전까지만 노출된다. */
+.blank-pack-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px dashed var(--cyan, #64d6ea);
+  background: color-mix(in srgb, var(--cyan, #64d6ea) 10%, transparent);
+}
+.blank-pack-hint[hidden] { display: none; }
+.blank-pack-hint strong {
+  display: block;
+  font-size: 13px;
+  color: var(--ink, #13243a);
+}
+.blank-pack-hint small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted, #687b91);
+}
+.blank-pack-hint-action {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  background: var(--cyan-deep, #278eae);
+}
+.blank-pack-hint-action:hover { filter: brightness(1.06); }
